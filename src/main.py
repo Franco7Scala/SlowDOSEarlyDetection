@@ -19,11 +19,11 @@ model = NeuralNetwork.NeuralNetwork(79, 2)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-loss = torch.nn.CrossEntropyLoss()
+criterion = torch.nn.CrossEntropyLoss()
 
 for epoch in range(epochs):
-    utils.train(train_loader, model, optimizer, loss, device)
+    utils.train(train_loader, model, optimizer, criterion, device)
     if epoch % 10 == 0:
-        accuracy, precision, recall, f1 = utils.test(test_loader, model, loss, device)
+        accuracy, precision, recall, f1 = utils.test(test_loader, model, criterion, device)
         print("epoch:", epoch)
         print("accuracy: "+accuracy,"precision: "+precision,"recall: "+recall,"f1: "+f1)

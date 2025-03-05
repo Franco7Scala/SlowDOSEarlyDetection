@@ -5,7 +5,7 @@ def train(train_loader, network, optimizer, criterion, device):
     loss_sum = 0
     for i, content in enumerate(train_loader):
         optimizer.zero_grad()
-        target = content[1].to(device)
+        target = content[1].to(device).view(-1)
         input = content[0].to(device)
         output = network(input)
         loss = criterion(output, target).mean()
@@ -23,8 +23,8 @@ def test(test_loader, network, criterion, device):
     network.eval()
     network.no_grad = True
     for i, (input, target) in enumerate(test_loader):
-        target = input.to(device)
-        input = target.to(device)
+        input = input.to(device)
+        target = target.to(device).view(-1)
         with torch.no_grad():
             output = network(input)
             loss = criterion(output, target).mean()

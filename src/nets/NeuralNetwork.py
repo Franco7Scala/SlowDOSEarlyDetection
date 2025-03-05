@@ -19,7 +19,7 @@ class NeuralNetwork(nn.Module):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def forward(self, x):
-        x = x.to(self.device)
+        x = x.to(self.device).float()
         logits = self.fully_connected_1(x)
         pred_probab = Softmax(dim=1)(logits)
         return pred_probab
