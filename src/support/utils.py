@@ -1,19 +1,19 @@
 import torch
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
-def train(train_loader, network, optimizer, criterion, arg):
+def train(train_loader, network, optimizer, criterion, device):
     loss_sum = 0
     for i, content in enumerate(train_loader):
         optimizer.zero_grad()
-        target = content[1].to(arg.device)
-        input = content[0].to(arg.device)
+        target = content[1].to(device)
+        input = content[0].to(device)
         output = network(input)
         loss = criterion(output, target).mean()
         loss.backward()
         optimizer.step()
         loss_sum += loss.item()
 
-def test(test_loader, network, criterion, arg):
+def test(test_loader, network, criterion, device):
     accuracy_am = AverageMeter('Accuracy', ':6.2f')
     precision_am = AverageMeter('Precision', ':6.2f')
     recall_am = AverageMeter('Recall', ':6.2f')
@@ -23,8 +23,8 @@ def test(test_loader, network, criterion, arg):
     network.eval()
     network.no_grad = True
     for i, (input, target) in enumerate(test_loader):
-        target = input.to(arg.device)
-        input = target.to(arg.device)
+        target = input.to(device)
+        input = target.to(device)
         with torch.no_grad():
             output = network(input)
             loss = criterion(output, target).mean()
