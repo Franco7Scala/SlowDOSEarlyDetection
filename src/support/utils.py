@@ -1,15 +1,22 @@
+import pandas as pd
 import torch
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
+#-----train and test-----#
 def train(train_loader, network, optimizer, criterion, device):
     loss_sum = 0
     for i, content in enumerate(train_loader):
         optimizer.zero_grad()
         target = content[1].to(device).view(-1)
         input = content[0].to(device)
+        if (input.isnan().any()):
+            print("input is nan")
         output = network(input)
-        loss = criterion(output, target).mean()
+        if (output.isnan().any()):
+            print("output is nan")
+        loss = torch.sqrt(criterion(output, target))
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(network.parameters(), 0.5)
         optimizer.step()
         loss_sum += loss.item()
 
@@ -27,7 +34,7 @@ def test(test_loader, network, criterion, device):
         target = target.to(device).view(-1)
         with torch.no_grad():
             output = network(input)
-            loss = criterion(output, target).mean()
+            loss = torch.sqrt(criterion(output, target))
         accuracy = accuracy_score(output.data.cpu(), target.data.cpu())
         accuracy_am.update(accuracy, input.size(0))
 
@@ -69,3 +76,41 @@ class AverageMeter(object):
     def __str__(self):
         fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
         return fmtstr.format(**self.__dict__)
+#-----train and test-----#
+
+#-----datasets utils-----#
+def stringLabels(dataFrames: [pd.DataFrame]) -> []:
+    ret = []
+    for df in dataFrames:
+        label = df[' Label'].drop_duplicates()
+        for string in label:
+            if string not in ret:
+                ret.append(string)
+    return ret
+
+def readPaths(paths: []) -> []:
+    ret = []
+    for path in paths:
+        df = pd.read_csv(path)
+        ret.append(df)
+    return ret
+
+def convertStrings(dataFrames: [pd.DataFrame], labels: []) -> []:
+    ret = []
+    value = 0.1
+    for df in dataFrames:
+        for string in labels:
+            df = df.replace(string, value)
+            value += 0.1
+        ret.append(df)
+    return ret
+
+def normalizeValues(dataFrame: pd.DataFrame) -> pd.DataFrame:
+    ret = dataFrame
+    for column in ret.columns:
+        if column != ' Label':
+            mean_value = ret[column].mean(axis=0)
+            ret[column] = ret[column].replace(0, mean_value)
+            ret[column] = ret[column].fillna(mean_value)
+    return ret
+#-----datasets utils-----#
