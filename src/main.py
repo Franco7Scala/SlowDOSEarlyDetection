@@ -1,8 +1,10 @@
 import torch
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, ConcatDataset
 import pandas as pd
+import numpy as np
 
 from src.datasets import Cicids
+from src.datasets import Randomset
 from src.nets import NeuralNetwork
 from src.support import utils
 
@@ -19,24 +21,29 @@ paths = ["C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/Mac
 dataFrames = utils.readPaths(paths)
 labels = utils.stringLabels(dataFrames)
 dataFrames = utils.convertStrings(dataFrames, labels)
+dataFrame = pd.concat(dataFrames)
 
-datasets = []
-for df in dataFrames:
-    datasets.append(Cicids.Cicids2017(df))
+dataset = Cicids.Cicids2017(dataFrame)
 
-train_sets, test_sets = [], []
-for dataset in datasets:
-    train, test = random_split(dataset, [0.7, 0.3])
-    train_sets.append(train)
-    test_sets.append(test)
+input_size = dataset.__len__() - 1
 
-train_set = torch.utils.data.ConcatDataset(train_sets)
-test_set = torch.utils.data.ConcatDataset(test_sets)
+train, test = utils.splitDataset(dataset)
 
-train_loader = DataLoader(train_set, batch_size=100, shuffle=True)
-test_loader = DataLoader(test_set, batch_size=100, shuffle=True)
+train_loader = DataLoader(train, batch_size=100, shuffle=True)
+test_loader = DataLoader(test, batch_size=100, shuffle=True)
 
-model = NeuralNetwork.NeuralNetwork(78, 1)
+#-----random dataset-----#
+'''
+test = pd.DataFrame(np.random.rand(300000, 78), columns=list(range(78)), dtype=float)
+test_dataset = Randomset.Randomset(test)
+test_train, test_test = random_split(test_dataset, [0.7, 0.3])
+test_train_loader = DataLoader(test_train, batch_size=100, shuffle=True)
+test_test_loader = DataLoader(test_test, batch_size=100, shuffle=True)
+'''
+#-----random dataset-----#
+
+
+model = NeuralNetwork.NeuralNetwork(input_size, 1)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.00001)
 

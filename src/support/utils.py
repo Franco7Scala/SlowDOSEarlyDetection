@@ -1,6 +1,12 @@
+import numpy as np
 import pandas as pd
 import torch
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+from sklearn.model_selection import StratifiedShuffleSplit
+from torch.utils.data import ConcatDataset
+
+import src.datasets.Cicids as Cicids2017
+
 
 #-----train and test-----#
 def train(train_loader, network, optimizer, criterion, device):
@@ -14,7 +20,7 @@ def train(train_loader, network, optimizer, criterion, device):
         output = network(input)
         if (output.isnan().any()):
             print("output is nan")
-        loss = torch.sqrt(criterion(output, target))
+        loss = criterion(output, target)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(network.parameters(), 0.5)
         optimizer.step()
@@ -34,6 +40,8 @@ def test(test_loader, network, criterion, device):
         target = target.to(device).view(-1)
         with torch.no_grad():
             output = network(input)
+            if (output.isnan().any()):
+                print("output is nan")
             loss = torch.sqrt(criterion(output, target))
         accuracy = accuracy_score(output.data.cpu(), target.data.cpu())
         accuracy_am.update(accuracy, input.size(0))
@@ -82,7 +90,7 @@ class AverageMeter(object):
 def stringLabels(dataFrames: [pd.DataFrame]) -> []:
     ret = []
     for df in dataFrames:
-        label = df[' Label'].drop_duplicates()
+        label = df[' Label'].unique()
         for string in label:
             if string not in ret:
                 ret.append(string)
@@ -97,11 +105,14 @@ def readPaths(paths: []) -> []:
 
 def convertStrings(dataFrames: [pd.DataFrame], labels: []) -> []:
     ret = []
-    value = 0.1
     for df in dataFrames:
         for string in labels:
-            df = df.replace(string, value)
-            value += 0.1
+            if string == "BENIGN":
+                value = 0
+                df = df.replace(string, value)
+            else:
+                value = 1
+                df = df.replace(string, value)
         ret.append(df)
     return ret
 
@@ -109,8 +120,39 @@ def normalizeValues(dataFrame: pd.DataFrame) -> pd.DataFrame:
     ret = dataFrame
     for column in ret.columns:
         if column != ' Label':
+            ret[column] = ret[column].replace(np.inf, 0) #replace inf with zero
+            for value in ret[column].unique():
+                if value < 0:
+                    ret[column] = ret[column].replace(value, 0) #replace negatives with zero
             mean_value = ret[column].mean(axis=0)
-            ret[column] = ret[column].replace(0, mean_value)
-            ret[column] = ret[column].fillna(mean_value)
+            ret[column] = ret[column].replace(0, mean_value) #replace 0 with mean value of the column
+            ret[column] = ret[column].fillna(mean_value) #replace na with mean value of the column
     return ret
+
+def removeCollinearFeatures(dataFrame: pd.DataFrame, threshold) -> pd.DataFrame:
+    ret = dataFrame
+    corr_matrix = dataFrame.corr(method='pearson', min_periods=5, numeric_only=True)
+    iters = range(len(corr_matrix.columns) - 1)
+    drop_columns = []
+    for i in iters:
+        for j in range(i + 1):
+            item = corr_matrix.iloc[j:(j + 1), (i + 1):(i + 2)]
+            col = item.columns
+            val = abs(item.values)
+            if val >= threshold:
+                drop_columns.append(col.values[0])
+    drop_columns = list(set(drop_columns))
+    ret = ret.drop(columns=drop_columns)
+    return ret
+
+def splitDataset(dataset: Cicids2017) -> (torch.utils.data.Dataset, torch.utils.data.Dataset):
+    x = dataset.x
+    y = dataset.y
+    sss = StratifiedShuffleSplit(train_size=0.7, test_size=0.3, random_state=50)
+    for train_index, test_index in sss.split(x, y):
+        x_train, x_test = x[train_index], x[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+    train = list(zip(x_train, y_train))
+    test = list(zip(x_test, y_test))
+    return train, test
 #-----datasets utils-----#

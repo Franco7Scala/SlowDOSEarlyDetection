@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from torch.nn import Softmax
 
 
 class NeuralNetwork(nn.Module):
@@ -27,5 +26,4 @@ class NeuralNetwork(nn.Module):
     def forward(self, x):
         x = x.to(self.device).float()
         logits = self.fully_connected_1(x)
-        pred_probab = Softmax(dim=1)(logits)
-        return pred_probab
+        return logits
