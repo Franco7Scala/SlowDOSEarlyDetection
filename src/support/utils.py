@@ -3,23 +3,19 @@ import pandas as pd
 import torch
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 from sklearn.model_selection import StratifiedShuffleSplit
-from torch.utils.data import ConcatDataset
 
 import src.datasets.Cicids as Cicids2017
 
 
 #-----train and test-----#
 def train(train_loader, network, optimizer, criterion, device):
+    network.train()
     loss_sum = 0
     for i, content in enumerate(train_loader):
         optimizer.zero_grad()
-        target = content[1].to(device).view(-1)
+        target = content[1].to(device).view(-1).long()
         input = content[0].to(device)
-        if (input.isnan().any()):
-            print("input is nan")
         output = network(input)
-        if (output.isnan().any()):
-            print("output is nan")
         loss = criterion(output, target)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(network.parameters(), 0.5)
@@ -37,22 +33,20 @@ def test(test_loader, network, criterion, device):
     network.no_grad = True
     for i, (input, target) in enumerate(test_loader):
         input = input.to(device)
-        target = target.to(device).view(-1)
+        target = target.to(device).view(-1).long()
         with torch.no_grad():
             output = network(input)
-            if (output.isnan().any()):
-                print("output is nan")
             loss = torch.sqrt(criterion(output, target))
-        accuracy = accuracy_score(output.data.cpu(), target.data.cpu())
-        accuracy_am.update(accuracy, input.size(0))
 
         _, predicted = torch.max(output.data, 1)
+        accuracy = accuracy_score(predicted.data.cpu(), target.data.cpu())
+        accuracy_am.update(accuracy, input.size(0))
         all_preds.extend(predicted.cpu().numpy())
         all_targets.extend(target.cpu().numpy())
 
-    precision = precision_score(all_targets, all_preds)
-    recall = recall_score(all_targets, all_preds)
-    f1 = f1_score(all_targets, all_preds)
+    precision = precision_score(all_targets, all_preds, average="weighted") #TOFIX for MultiClassModel
+    recall = recall_score(all_targets, all_preds, average="weighted") #TOFIX for MultiClassModel
+    f1 = f1_score(all_targets, all_preds, average="weighted") #TOFIX for MultiClassModel
 
     precision_am.update(precision)
     recall_am.update(recall)
@@ -103,16 +97,28 @@ def readPaths(paths: []) -> []:
         ret.append(df)
     return ret
 
-def convertStrings(dataFrames: [pd.DataFrame], labels: []) -> []:
+def convertStringsTC(dataFrames: [pd.DataFrame], labels: []) -> []:
     ret = []
     for df in dataFrames:
         for string in labels:
             if string == "BENIGN":
-                value = 0
-                df = df.replace(string, value)
+                df = df.replace(string, 0)
             else:
-                value = 1
-                df = df.replace(string, value)
+                df = df.replace(string, 1)
+        ret.append(df)
+    return ret
+
+def convertStringsMC(dataFrames: [pd.DataFrame], labels: []) -> []:
+    ret = []
+    value = 0
+    for df in dataFrames:
+        for string in labels:
+            if string == "BENIGN":
+                df = df.replace(string, 0)
+            else:
+                if string in df.values:
+                    value += 1
+                    df = df.replace(string, value)
         ret.append(df)
     return ret
 

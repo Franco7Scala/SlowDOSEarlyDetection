@@ -21,9 +21,8 @@ class NeuralNetwork(nn.Module):
             nn.Linear(32, output_size),
         )
 
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
     def forward(self, x):
-        x = x.to(self.device).float()
+        x = x.float()
         logits = self.fully_connected_1(x)
-        return logits
+        ret = torch.softmax(logits, dim=1)
+        return ret
