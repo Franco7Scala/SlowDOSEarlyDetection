@@ -10,20 +10,22 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 paths = ["C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Morning.pcap_ISCX.csv",
-        "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Monday-WorkingHours.pcap_ISCX.csv",
+        #"C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Monday-WorkingHours.pcap_ISCX.csv",#
         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv",
         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv",
         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Tuesday-WorkingHours.pcap_ISCX.csv",
         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Wednesday-workingHours.pcap_ISCX.csv"]
 
 #-----DataFrame-----#
-dataFrames = utils.readPaths(paths)
-labels = utils.stringLabels(dataFrames)
-dataFrames = utils.convertStringsMC(dataFrames, labels)
-dataFrame = pd.concat(dataFrames)
+dataframes = utils.readPaths(paths)
+labels = utils.stringLabels(dataframes)
+dataframes = utils.convertStringsMC(dataframes, labels)
+dataframe = pd.concat(dataframes)
 #-----DataFrame-----#
 
-dataset = Cicids.Cicids2017(dataFrame)
+weights = utils.assigngWeights(dataframe)
+
+dataset = Cicids.Cicids2017(dataframe)
 
 input_size = dataset.x.shape[1]
 
@@ -31,23 +33,33 @@ output_size = len(labels)
 
 batch_size = 500
 
-train, test = utils.splitDataset(dataset)
+#-----Train, Validation and Test DataLoaders-----#
+train_temp, test = utils.splitDataset(dataset, 0.7, 0.3)
+train, validation = utils.splitDataset(train_temp, 0.8, 0.2)
 
 train_loader = DataLoader(train, batch_size=batch_size, shuffle=True)
+validation_loader = DataLoader(validation, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test, batch_size=batch_size, shuffle=True)
+#-----Train, Validation and Test DataLoaders-----#
 
 #-----MultiClassModel-----#
 model = NeuralNetwork.NeuralNetwork(input_size, output_size).to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.00001)
 
-criterion = torch.nn.CrossEntropyLoss()
+criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
-epochs = 50
+epochs = 150
+print("Starting Training...")
 for epoch in range(epochs):
     utils.train(train_loader, model, optimizer, criterion, device)
-    if epoch % 10 == 0 or epoch == 49:
-        accuracy, precision, recall, f1 = utils.test(test_loader, model, criterion, device)
+    if epoch % 10 == 0 or epoch == epochs - 1:
+        accuracy, precision, recall, f1 = utils.evaluate(validation_loader, model, criterion, device)
         print("epoch:", epoch)
         print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
+print("Finished Training!")
+print("Starting Testing...")
+accuracy, precision, recall, f1 = utils.evaluate(test_loader, model, criterion, device)
+print("Test results:")
+print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
 #-----MultiClassModel-----#

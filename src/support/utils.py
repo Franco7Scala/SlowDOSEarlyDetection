@@ -22,7 +22,7 @@ def train(train_loader, network, optimizer, criterion, device):
         optimizer.step()
         loss_sum += loss.item()
 
-def test(test_loader, network, criterion, device):
+def evaluate(loader, network, criterion, device):
     accuracy_am = AverageMeter('Accuracy', ':6.2f')
     precision_am = AverageMeter('Precision', ':6.2f')
     recall_am = AverageMeter('Recall', ':6.2f')
@@ -31,7 +31,7 @@ def test(test_loader, network, criterion, device):
     all_targets = []
     network.eval()
     network.no_grad = True
-    for i, (input, target) in enumerate(test_loader):
+    for i, (input, target) in enumerate(loader):
         input = input.to(device)
         target = target.to(device).view(-1).long()
         with torch.no_grad():
@@ -44,9 +44,9 @@ def test(test_loader, network, criterion, device):
         all_preds.extend(predicted.cpu().numpy())
         all_targets.extend(target.cpu().numpy())
 
-    precision = precision_score(all_targets, all_preds, average="weighted") #TOFIX for MultiClassModel
-    recall = recall_score(all_targets, all_preds, average="weighted") #TOFIX for MultiClassModel
-    f1 = f1_score(all_targets, all_preds, average="weighted") #TOFIX for MultiClassModel
+    precision = precision_score(all_targets, all_preds, average="weighted")
+    recall = recall_score(all_targets, all_preds, average="weighted")
+    f1 = f1_score(all_targets, all_preds, average="weighted")
 
     precision_am.update(precision)
     recall_am.update(recall)
@@ -151,14 +151,23 @@ def removeCollinearFeatures(dataFrame: pd.DataFrame, threshold) -> pd.DataFrame:
     ret = ret.drop(columns=drop_columns)
     return ret
 
-def splitDataset(dataset: Cicids2017) -> (torch.utils.data.Dataset, torch.utils.data.Dataset):
+def splitDataset(dataset: Cicids2017, size1: float, size2: float) -> (torch.utils.data.Dataset, torch.utils.data.Dataset):
     x = dataset.x
     y = dataset.y
-    sss = StratifiedShuffleSplit(train_size=0.7, test_size=0.3, random_state=50)
+    sss = StratifiedShuffleSplit(train_size=size1, test_size=size2, random_state=50)
     for train_index, test_index in sss.split(x, y):
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
     train = list(zip(x_train, y_train))
     test = list(zip(x_test, y_test))
     return train, test
+
+def assigngWeights(dataFrame: pd.DataFrame) -> torch.Tensor:
+    ret = []
+    counts = dataFrame[' Label'].value_counts()
+    rows = dataFrame[" Label"].count()
+    for value in counts:
+        weight = rows / value
+        ret.append(weight)
+    return torch.Tensor(ret)
 #-----datasets utils-----#
