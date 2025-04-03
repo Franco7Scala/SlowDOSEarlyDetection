@@ -151,16 +151,13 @@ def removeCollinearFeatures(dataFrame: pd.DataFrame, threshold) -> pd.DataFrame:
     ret = ret.drop(columns=drop_columns)
     return ret
 
-def splitDataset(dataset: Cicids2017, size1: float, size2: float) -> (torch.utils.data.Dataset, torch.utils.data.Dataset):
-    x = dataset.x
-    y = dataset.y
+def splitDataset(data: torch.Tensor, target: torch.Tensor, size1: float, size2: float) -> (torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor):
+    global y_test, y_train, x_test, x_train
     sss = StratifiedShuffleSplit(train_size=size1, test_size=size2, random_state=50)
-    for train_index, test_index in sss.split(x, y):
-        x_train, x_test = x[train_index], x[test_index]
-        y_train, y_test = y[train_index], y[test_index]
-    train = list(zip(x_train, y_train))
-    test = list(zip(x_test, y_test))
-    return train, test
+    for train_index, test_index in sss.split(data, target):
+        x_train, x_test = data[train_index], data[test_index]
+        y_train, y_test = target[train_index], target[test_index]
+    return x_train, x_test, y_train, y_test
 
 def assigngWeights(dataFrame: pd.DataFrame) -> torch.Tensor:
     ret = []
