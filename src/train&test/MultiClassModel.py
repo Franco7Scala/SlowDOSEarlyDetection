@@ -7,6 +7,7 @@ from src.nets import NeuralNetwork
 from src.support import utils
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(device)
 
 paths = ["C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Morning.pcap_ISCX.csv",
@@ -51,7 +52,7 @@ model = NeuralNetwork.NeuralNetwork(input_size, output_size).to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.00001)
 
-criterion = torch.nn.CrossEntropyLoss(weight=weights)
+criterion = torch.nn.CrossEntropyLoss(weight=weights.to(device))
 
 epochs = 150
 print("Starting Training...")
