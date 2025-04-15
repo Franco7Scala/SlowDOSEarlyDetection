@@ -13,18 +13,22 @@ from sklearn.manifold import TSNE
 
 class MNIST_VAE(nn.Module):
 
-    def __init__(self, dim_code, device):
+    def __init__(self, dim_code, input_size, device):
         super().__init__()
         self.label = nn.Embedding(10, dim_code)
         self.device = device
         # encoder
-        self.encoder = nn.Sequential(nn.Conv2d(1, 64, kernel_size=4, stride=2, padding=1), nn.ReLU(), nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1), nn.BatchNorm2d(128), nn.ReLU())
-        self.flatten_mu = nn.Linear(128 * 7 * 7, out_features=dim_code)
-        self.flatten_log_sigma = nn.Linear(128 * 7 * 7, out_features=dim_code)
+        self.encoder = nn.Sequential(nn.Linear(input_size, 128),
+                                     nn.ReLU(),
+                                     nn.Linear(128, 256),
+                                     nn.BatchNorm1d(256),
+                                     nn.ReLU())
+        self.flatten_mu = nn.Linear(256, out_features=dim_code)
+        self.flatten_log_sigma = nn.Linear(256, out_features=dim_code)
         # decoder
-        self.decode_linear = nn.Linear(4, 128 * 7 * 7)
-        self.decode_2 = nn.ConvTranspose2d(in_channels=128, out_channels=64, kernel_size=4, stride=2, padding=1)
-        self.decode_1 = nn.ConvTranspose2d(in_channels=64, out_channels=1, kernel_size=4, stride=2, padding=1)
+        self.decode_linear = nn.Linear(dim_code, 256)
+        self.decode_2 = nn.Linear(256, 128)
+        self.decode_1 = nn.Linear(128, input_size)
         self.to(self.device)
 
     def encode(self, x):
@@ -56,46 +60,69 @@ class MNIST_VAE(nn.Module):
         mu, log_sigma = self.flatten_mu(x), self.flatten_log_sigma(x)
         z = self.gaussian_sampler(mu, log_sigma)
         x = self.decode_linear(z)
-        x = x.view(x.size(0), 128, 7, 7)
+        x = x.view(x.size(0), 256)
         x = F.relu(self.decode_2(x))
         reconstruction = F.sigmoid(self.decode_1(x))
         return mu, log_sigma, reconstruction
 
-    def _train_epoch(self, criterion, optimizer, data_loader):
+    def _train_epoch(self, optimizer, data_loader):
         train_losses_per_epoch = []
+        recon_losses_per_epoch = []
         self.train()
         for x_batch, _ in data_loader:
             x_batch = x_batch.to(self.device)
             mu, log_sigma, reconstruction = self(x_batch)
-            loss = criterion(x_batch.to(self.device).float(), mu, log_sigma, reconstruction)
+            recon_loss = log_likelihood(x_batch.to(self.device).float(), reconstruction)
+            kl_loss = kl_divergence(mu, log_sigma)
+            loss = kl_loss + recon_loss
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             train_losses_per_epoch.append(loss.item())
+            recon_losses_per_epoch.append(recon_loss.item())
 
-        return numpy.mean(train_losses_per_epoch), mu, log_sigma, reconstruction
+        return numpy.mean(train_losses_per_epoch), numpy.mean(recon_losses_per_epoch)
 
-    def evaluate(self, criterion, data_loader):
+    def evaluate(self, data_loader):
         val_losses_per_epoch = []
+        recon_losses_per_epoch = []
         self.eval()
         with torch.no_grad():
             for x_val, _ in data_loader:
                 x_val = x_val.to(self.device)
                 mu, log_sigma, reconstruction = self(x_val)
-                loss = criterion(x_val.to(self.device).float(), mu, log_sigma, reconstruction)
+                recon_loss = log_likelihood(x_val.to(self.device).float(), reconstruction)
+                kl_loss = kl_divergence(mu, log_sigma)
+                loss = kl_loss + recon_loss
                 val_losses_per_epoch.append(loss.item())
+                recon_losses_per_epoch.append(recon_loss.item())
 
-        return numpy.mean(val_losses_per_epoch), mu, log_sigma, reconstruction
+        return numpy.mean(val_losses_per_epoch), numpy.mean(recon_losses_per_epoch)
 
-    def fit(self, epochs, criterion, optimizer, train_loader, test_loader):
-        loss = {"train_loss": [], "val_loss": []}
+    def fit(self, epochs, optimizer, train_loader, test_loader):
+        loss = {"train_loss": [], "val_loss": [], "train_recon_loss": [], "val_recon_loss": []}
         with tqdm(desc="Training", total=epochs) as pbar_outer:
             for epoch in range(epochs):
-                train_loss, _, _, _ = self._train_epoch(criterion, optimizer, train_loader)
-                val_loss, _, _, _ = self.evaluate(criterion, test_loader)
+                train_loss, train_recon_loss = self._train_epoch(optimizer, train_loader)
+                val_loss, val_recon_loss = self.evaluate(test_loader)
                 pbar_outer.update(1)
                 loss["train_loss"].append(train_loss)
                 loss["val_loss"].append(val_loss)
+                loss["train_recon_loss"].append(train_recon_loss)
+                loss["val_recon_loss"].append(val_recon_loss)
+        self.plotVAE(loss)
+
+    def plotVAE(self, loss):
+        plt.figure(figsize=(10, 6))
+        plt.plot(loss["train_recon_loss"], label="Train Reconstruction Loss", linewidth=2)
+        plt.plot(loss["val_recon_loss"], label="Validation Reconstruction Loss", linewidth=2)
+        plt.xlabel("Epochs")
+        plt.ylabel("Reconstruction Error")
+        plt.title("Reconstruction Error trend")
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
 
     def save(self, path):
         torch.save(self.state_dict(), path)
@@ -162,7 +189,7 @@ def kl_divergence(mu, log_sigma):
 
 
 def log_likelihood(x, reconstruction):
-    loss = nn.BCELoss(reduction="sum")
+    loss = nn.CrossEntropyLoss(reduction="sum")
     return loss(reconstruction, x)
 
 

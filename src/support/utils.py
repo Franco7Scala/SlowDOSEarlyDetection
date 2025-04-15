@@ -4,8 +4,6 @@ import torch
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 from sklearn.model_selection import StratifiedShuffleSplit
 
-import src.datasets.Cicids as Cicids2017
-
 
 #-----train and test-----#
 def train(train_loader, network, optimizer, criterion, device):

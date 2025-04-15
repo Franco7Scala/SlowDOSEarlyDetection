@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader, TensorDataset
 import pandas as pd
 
 from src.datasets import Cicids
-from src.nets import NeuralNetwork
+from src.nets import PredictiveNN
 from src.support import utils
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -48,7 +48,7 @@ test_loader = DataLoader(test, batch_size=batch_size, shuffle=True)
 #-----Train, Validation and Test DataLoaders-----#
 
 #-----MultiClassModel-----#
-model = NeuralNetwork.NeuralNetwork(input_size, output_size).to(device)
+model = PredictiveNN.NeuralNetwork(input_size, output_size).to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.00001)
 
