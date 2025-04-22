@@ -3,9 +3,10 @@ from torch.utils.data import DataLoader, TensorDataset
 import pandas as pd
 
 from src.datasets import Cicids
-from src.nets import PredictiveNN
 from src.support import utils
-from src.nets import mnist_vae
+from src.nets.PredictiveNN import PredictiveNN
+from src.nets.VAENN import VAENN
+from src.nets.ConcatenatedPredictiveVAE import ConcatenatedPredictiveVAE
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
@@ -33,7 +34,7 @@ input_size = dataset.x.shape[1]
 
 output_size = len(labels)
 
-batch_size = 500
+batch_size = 512
 
 #-----Train, Validation and Test DataLoaders-----#
 x_main, x_test, y_main, y_test = utils.splitDataset(dataset.x, dataset.y, 0.7, 0.3)
@@ -48,6 +49,26 @@ validation_loader = DataLoader(validation, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test, batch_size=batch_size, shuffle=True)
 #-----Train, Validation and Test DataLoaders-----#
 
-MCModel = PredictiveNN.NeuralNetwork(input_size, output_size)
+MCModel = PredictiveNN(input_size, output_size, device)
 
-VAEModel = mnist_vae.MNIST_VAE(32, input_size, device)
+VAEModel = VAENN(32, input_size, device)
+
+MCOptimizer = torch.optim.Adam(MCModel.parameters(), lr=0.00001)
+VAEOptimizer = torch.optim.Adam(VAEModel.parameters(), lr=0.00001)
+
+criterion = torch.nn.CrossEntropyLoss(weight=weights.to(device))
+
+epochs = 150
+
+MCModel.fit(epochs, train_loader, validation_loader, MCOptimizer, criterion)
+print("Starting Testing...")
+accuracy, precision, recall, f1 = MCModel.evaluate(test_loader, criterion)
+print("Test results:")
+print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
+MCModel.load_state_dict(torch.load("best_accuracy_scoring_predictive_nn.pt"))
+
+VAEModel.fit(epochs, VAEOptimizer, train_loader, validation_loader)
+VAEModel.evaluate(test_loader)
+VAEModel.eval()
+
+CPVAEModel = ConcatenatedPredictiveVAE(MCModel, VAEModel, input_size + output_size, output_size, device)

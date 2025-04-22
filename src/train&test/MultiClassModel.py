@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader, TensorDataset
 import pandas as pd
 
 from src.datasets import Cicids
-from src.nets import PredictiveNN
+from src.nets.PredictiveNN import PredictiveNN
 from src.support import utils
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -48,23 +48,18 @@ test_loader = DataLoader(test, batch_size=batch_size, shuffle=True)
 #-----Train, Validation and Test DataLoaders-----#
 
 #-----MultiClassModel-----#
-model = PredictiveNN.NeuralNetwork(input_size, output_size).to(device)
+model = PredictiveNN(input_size, output_size, device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.00001)
 
 criterion = torch.nn.CrossEntropyLoss(weight=weights.to(device))
 
 epochs = 150
-print("Starting Training...")
-for epoch in range(epochs):
-    utils.train(train_loader, model, optimizer, criterion, device)
-    if epoch % 10 == 0 or epoch == epochs - 1:
-        accuracy, precision, recall, f1 = utils.evaluate(validation_loader, model, criterion, device)
-        print("epoch:", epoch)
-        print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
-print("Finished Training!")
+
+model.fit(epochs, train_loader, validation_loader, criterion, optimizer)
+
 print("Starting Testing...")
-accuracy, precision, recall, f1 = utils.evaluate(test_loader, model, criterion, device)
+accuracy, precision, recall, f1 = model.evaluate(test_loader, criterion)
 print("Test results:")
 print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
 #-----MultiClassModel-----#

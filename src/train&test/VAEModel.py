@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader, TensorDataset
 import pandas as pd
 
 from src.datasets import Cicids
-from src.nets import mnist_vae
+from src.nets.VAENN import VAENN
 from src.support import utils
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -48,11 +48,11 @@ test_loader = DataLoader(test, batch_size=batch_size, shuffle=True)
 #-----Train, Validation and Test DataLoaders-----#
 
 #-----VAEModel-----#
-model = mnist_vae.MNIST_VAE(32, input_size, device)
+model = VAENN(32, input_size, device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.00001)
 
 epochs = 150
 
-model.fit(epochs, optimizer, train_loader, test_loader)
+model.fit(epochs, optimizer, train_loader, validation_loader)
 #-----VAEModel-----#

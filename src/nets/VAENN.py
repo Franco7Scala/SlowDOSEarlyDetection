@@ -5,13 +5,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 import plotly.express as px
 
-from IPython.display import clear_output
 from tqdm.autonotebook import tqdm
 from matplotlib import pyplot as plt
 from sklearn.manifold import TSNE
 
 
-class MNIST_VAE(nn.Module):
+class VAENN(nn.Module):
 
     def __init__(self, dim_code, input_size, device):
         super().__init__()
@@ -127,29 +126,6 @@ class MNIST_VAE(nn.Module):
     def save(self, path):
         torch.save(self.state_dict(), path)
 
-    def draw_reconstructions(self, test_dataset, image_path, size=5):
-        clear_output(wait=True)
-        plt.figure(figsize=(18, 6))
-        for k in range(size):
-            ax = plt.subplot(2, size, k + 1)
-            img = test_dataset[k][0].unsqueeze(0).to(self.device)
-            self.eval()
-            with torch.no_grad():
-                mu, log_sigma, reconstruction = self(img)
-
-            plt.imshow(img.cpu().squeeze().numpy(), cmap="gray")
-            plt.axis("off")
-            if k == size // 2:
-                ax.set_title("Real")
-
-            ax = plt.subplot(2, size, k + 1 + size)
-            plt.imshow(reconstruction.cpu().squeeze().numpy(), cmap="gray")
-            plt.axis("off")
-            if k == size // 2:
-                ax.set_title("Output")
-
-        plt.savefig(image_path)
-
     def draw_latent_space(self, test_dataset, path_image):
         latent_space = []
         test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=1, shuffle=False)
@@ -178,7 +154,7 @@ class MNIST_VAE(nn.Module):
 
 
 def load_model(dim_code, path, device):
-    model = MNIST_VAE(dim_code, device)
+    model = VAENN(dim_code, device)
     model.load_state_dict(torch.load(path, map_location=device))
     return model
 
