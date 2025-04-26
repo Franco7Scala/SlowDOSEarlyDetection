@@ -3,51 +3,51 @@ import torch.nn as nn
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
 
-class PredictiveNN(nn.Module):
+class ConcatenatedPredictiveVAE(nn.Module):
 
-    def __init__(self, input_size, output_size, device):
-        super(PredictiveNN, self).__init__()
+    def __init__(self, model1, model2, input_size, output_size, device):
+        super(ConcatenatedPredictiveVAE, self).__init__()
         self.device = device
+        self.model1 = model1
+        self.model2 = model2
         self.fully_connected_1 = nn.Sequential(
             nn.Linear(input_size, 128),
-            nn.ReLU(inplace=True),
-            nn.BatchNorm1d(128),
-            nn.Dropout(0.3),
-            nn.Linear(128, 256),
-            nn.ReLU(inplace=True),
-            nn.BatchNorm1d(256),
-            nn.Dropout(0.3),
-            nn.Linear(256, 128),
-            nn.ReLU(inplace=True),
-            nn.BatchNorm1d(128),
-            nn.Dropout(0.3),
+            nn.ReLU(),
             nn.Linear(128, 64),
-            nn.ReLU(inplace=True),
-            nn.BatchNorm1d(64),
-            nn.Dropout(0.3),
-            nn.Linear(64, 32),
-            nn.ReLU(inplace=True),
-            nn.BatchNorm1d(32),
-            nn.Dropout(0.3),
-            nn.Linear(32, output_size)
+            nn.ReLU(),
+            nn.Linear(64, output_size),
         )
         self.to(self.device)
 
-    def forward(self, x):
-        x = x.float()
+    def forward(self, x1, x2):
+        x1 = self.model1(x1)
+        x2 = self.model2(x2)
+        x2 = x2[2]
+        x2 = torch.Tensor(x2)
+        x = torch.cat((x1, x2), dim=1)
         logits = self.fully_connected_1(x)
-        ret = torch.softmax(logits, dim=1)
-        return ret
+        return logits
 
-#-----train and test-----#
+# -----train and test-----#
     def _train_epoch(self, train_loader, optimizer, criterion):
         self.train()
+
+        #-----freeze model1 and model2-----#
+        self.model1.eval()
+        self.model2.eval()
+        for param in self.model1.parameters():
+            param.requires_grad = False
+        for param in self.model2.parameters():
+            param.requires_grad = True
+        # -----freeze model1 and model2-----#
+
         loss_sum = 0
         for i, content in enumerate(train_loader):
             optimizer.zero_grad()
             target = content[1].to(self.device).view(-1).long()
-            input = content[0].to(self.device)
-            output = self(input)
+            input1 = content[0].to(self.device)
+            input2 = content[0].to(self.device)
+            output = self(input1, input2)
             loss = criterion(output, target)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.parameters(), 0.5)
@@ -64,10 +64,11 @@ class PredictiveNN(nn.Module):
         self.eval()
         self.no_grad = True
         for i, (input, target) in enumerate(loader):
-            input = input.to(self.device)
+            input1 = input.to(self.device)
+            input2 = input.to(self.device)
             target = target.to(self.device).view(-1).long()
             with torch.no_grad():
-                output = self(input)
+                output = self(input1, input2)
                 loss = torch.sqrt(criterion(output, target))
 
             _, predicted = torch.max(output.data, 1)
@@ -92,21 +93,15 @@ class PredictiveNN(nn.Module):
         accuracy, precision, recall, f1 = 0, 0, 0, 0
         for epoch in range(epochs):
             self._train_epoch(train_loader, optimizer, criterion)
-            new_accuracy, new_precision, new_recall, new_f1 = self.evaluate(test_loader, criterion)
-            if (new_accuracy > accuracy):
-                accuracy, precision, recall, f1 = new_accuracy, new_precision, new_recall, new_f1
-                self.save("best_accuracy_scoring_predictive_nn.pt")
+            accuracy, precision, recall, f1 = self.evaluate(test_loader, criterion)
             print("epoch:", epoch)
-            print(f"accuracy: {new_accuracy}, precision: {new_precision}, recall: {new_recall}, f1: {new_f1}")
+            print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
         print("Finished training!")
         print("Final results:")
         print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
 # -----train and test-----#
 
-    def save(self, path):
-        torch.save(self.state_dict(), path)
-
-#da: PlayItStraiht di Francesco Scala
+# da: PlayItStraiht di Francesco Scala
 class AverageMeter(object):
     def __init__(self, name, fmt=':f'):
         self.name = name

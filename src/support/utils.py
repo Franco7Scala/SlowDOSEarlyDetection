@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import torch
 from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.utils import compute_class_weight
+
 
 #-----datasets utils-----#
 def stringLabels(dataFrames: [pd.DataFrame]) -> []:
@@ -81,13 +83,4 @@ def splitDataset(data: torch.Tensor, target: torch.Tensor, size1: float, size2: 
         x_train, x_test = data[train_index], data[test_index]
         y_train, y_test = target[train_index], target[test_index]
     return x_train, x_test, y_train, y_test
-
-def assigngWeights(dataFrame: pd.DataFrame) -> torch.Tensor:
-    ret = []
-    counts = dataFrame[' Label'].value_counts()
-    rows = dataFrame[" Label"].count()
-    for value in counts:
-        weight = rows / value
-        ret.append(weight)
-    return torch.Tensor(ret)
 #-----datasets utils-----#

@@ -1,4 +1,6 @@
+import numpy as np
 import torch
+from sklearn.utils import compute_class_weight
 from torch.utils.data import DataLoader, TensorDataset
 import pandas as pd
 
@@ -6,7 +8,7 @@ from src.datasets import Cicids
 from src.support import utils
 from src.nets.PredictiveNN import PredictiveNN
 from src.nets.VAENN import VAENN
-from src.nets.ConcatenatedPredictiveVAE import ConcatenatedPredictiveVAE
+from src.nets.ConcatenatedPredictiveVAENN import ConcatenatedPredictiveVAE
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
@@ -20,15 +22,18 @@ paths = ["C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/Mac
         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Wednesday-workingHours.pcap_ISCX.csv"]
 
 #-----DataFrame-----#
+print("Processing dateset...")
 dataframes = utils.readPaths(paths)
 labels = utils.stringLabels(dataframes)
 dataframes = utils.convertStringsMC(dataframes, labels)
 dataframe = pd.concat(dataframes)
 #-----DataFrame-----#
 
-weights = utils.assigngWeights(dataframe)
+weights = compute_class_weight(class_weight='balanced', classes=np.unique(dataframe[' Label']), y=dataframe[' Label'])
+weights_tensor = torch.Tensor(weights)
 
 dataset = Cicids.Cicids2017(dataframe)
+print("Done!")
 
 input_size = dataset.x.shape[1]
 
@@ -37,6 +42,7 @@ output_size = len(labels)
 batch_size = 512
 
 #-----Train, Validation and Test DataLoaders-----#
+print("Creating train, validation and test dataloaders...")
 x_main, x_test, y_main, y_test = utils.splitDataset(dataset.x, dataset.y, 0.7, 0.3)
 x_train, x_validation, y_train, y_validation = utils.splitDataset(x_main, y_main, 0.8, 0.2)
 
@@ -47,28 +53,49 @@ test = TensorDataset(x_test, y_test)
 train_loader = DataLoader(train, batch_size=batch_size, shuffle=True)
 validation_loader = DataLoader(validation, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test, batch_size=batch_size, shuffle=True)
+print("Done!")
 #-----Train, Validation and Test DataLoaders-----#
 
-MCModel = PredictiveNN(input_size, output_size, device)
+MC_model = PredictiveNN(input_size, output_size, device)
 
-VAEModel = VAENN(32, input_size, device)
+VAE_model = VAENN(32, input_size, device)
 
-MCOptimizer = torch.optim.Adam(MCModel.parameters(), lr=0.00001)
-VAEOptimizer = torch.optim.Adam(VAEModel.parameters(), lr=0.00001)
+MC_optimizer = torch.optim.Adam(MC_model.parameters(), lr=0.00001)
+VAE_optimizer = torch.optim.Adam(VAE_model.parameters(), lr=0.00001)
 
-criterion = torch.nn.CrossEntropyLoss(weight=weights.to(device))
+MC_criterion = torch.nn.CrossEntropyLoss(weight=weights_tensor.to(device))
 
 epochs = 150
 
-MCModel.fit(epochs, train_loader, validation_loader, MCOptimizer, criterion)
+#-----MultiClass model training-----#
+print("Starting MultiClass model Training...")
+MC_model.fit(epochs, train_loader, validation_loader, MC_optimizer, MC_criterion)
+MC_model.load_state_dict(torch.load("best_accuracy_scoring_predictive_nn.pt"))
 print("Starting Testing...")
-accuracy, precision, recall, f1 = MCModel.evaluate(test_loader, criterion)
+accuracy, precision, recall, f1 = MC_model.evaluate(test_loader, MC_criterion)
 print("Test results:")
 print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
-MCModel.load_state_dict(torch.load("best_accuracy_scoring_predictive_nn.pt"))
+#-----MultiClass model training-----#
 
-VAEModel.fit(epochs, VAEOptimizer, train_loader, validation_loader)
-VAEModel.evaluate(test_loader)
-VAEModel.eval()
+#-----VAE model training-----#
+print("Starting VirtualAutoEncoder model Training...")
+VAE_model.fit(epochs, VAE_optimizer, train_loader, validation_loader)
+print("Starting testing...")
+VAE_model.evaluate(test_loader)
+print("Done!")
+#-----VAE model training-----#
 
-CPVAEModel = ConcatenatedPredictiveVAE(MCModel, VAEModel, input_size + output_size, output_size, device)
+CPVAE_model = ConcatenatedPredictiveVAE(MC_model, VAE_model, input_size + output_size, output_size, device)
+
+CPVAE_criterion = torch.nn.CrossEntropyLoss()
+
+CPVAE_optimizer = torch.optim.Adam(CPVAE_model.parameters(), lr=0.00001)
+
+#-----CPVAE model training-----#
+print("Starting ConcatenatedPredictiveVAE model Training...")
+CPVAE_model.fit(epochs, train_loader, validation_loader, CPVAE_optimizer, CPVAE_criterion)
+print("Starting Testing...")
+accuracy, precision, recall, f1 = CPVAE_model.evaluate(test_loader, CPVAE_criterion)
+print("Test results:")
+print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
+#-----CPVAE model training-----#

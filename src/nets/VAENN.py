@@ -17,11 +17,12 @@ class VAENN(nn.Module):
         self.label = nn.Embedding(10, dim_code)
         self.device = device
         # encoder
-        self.encoder = nn.Sequential(nn.Linear(input_size, 128),
-                                     nn.ReLU(),
-                                     nn.Linear(128, 256),
-                                     nn.BatchNorm1d(256),
-                                     nn.ReLU())
+        self.encoder = nn.Sequential(
+            nn.Linear(input_size, 128),
+            nn.ReLU(),
+            nn.Linear(128, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU())
         self.flatten_mu = nn.Linear(256, out_features=dim_code)
         self.flatten_log_sigma = nn.Linear(256, out_features=dim_code)
         # decoder

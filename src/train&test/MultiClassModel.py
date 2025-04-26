@@ -1,6 +1,8 @@
 import torch
+from sklearn.utils import compute_class_weight
 from torch.utils.data import DataLoader, TensorDataset
 import pandas as pd
+import numpy as np
 
 from src.datasets import Cicids
 from src.nets.PredictiveNN import PredictiveNN
@@ -17,6 +19,7 @@ paths = ["C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/Mac
         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Tuesday-WorkingHours.pcap_ISCX.csv",
         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Wednesday-workingHours.pcap_ISCX.csv"]
 
+print("Processing dataset...")
 #-----DataFrame-----#
 dataframes = utils.readPaths(paths)
 labels = utils.stringLabels(dataframes)
@@ -24,9 +27,11 @@ dataframes = utils.convertStringsMC(dataframes, labels)
 dataframe = pd.concat(dataframes)
 #-----DataFrame-----#
 
-weights = utils.assigngWeights(dataframe)
+weights = compute_class_weight(class_weight='balanced', classes=np.unique(dataframe[' Label']), y=dataframe[' Label'])
+weights_tensor = torch.Tensor(weights)
 
 dataset = Cicids.Cicids2017(dataframe)
+print("Done!")
 
 input_size = dataset.x.shape[1]
 
@@ -35,6 +40,7 @@ output_size = len(labels)
 batch_size = 500
 
 #-----Train, Validation and Test DataLoaders-----#
+print("Creating train, validation and test splits...")
 x_main, x_test, y_main, y_test = utils.splitDataset(dataset.x, dataset.y, 0.7, 0.3)
 x_train, x_validation, y_train, y_validation = utils.splitDataset(x_main, y_main, 0.8, 0.2)
 
@@ -45,18 +51,19 @@ test = TensorDataset(x_test, y_test)
 train_loader = DataLoader(train, batch_size=batch_size, shuffle=True)
 validation_loader = DataLoader(validation, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test, batch_size=batch_size, shuffle=True)
+print("Done!")
 #-----Train, Validation and Test DataLoaders-----#
 
 #-----MultiClassModel-----#
 model = PredictiveNN(input_size, output_size, device)
 
-optimizer = torch.optim.Adam(model.parameters(), lr=0.00001)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.00001, weight_decay=0.00001)
 
-criterion = torch.nn.CrossEntropyLoss(weight=weights.to(device))
+criterion = torch.nn.CrossEntropyLoss(weight=weights_tensor.to(device))
 
 epochs = 150
 
-model.fit(epochs, train_loader, validation_loader, criterion, optimizer)
+model.fit(epochs, train_loader, validation_loader, optimizer, criterion)
 
 print("Starting Testing...")
 accuracy, precision, recall, f1 = model.evaluate(test_loader, criterion)

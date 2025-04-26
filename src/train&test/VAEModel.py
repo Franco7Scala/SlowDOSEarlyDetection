@@ -24,8 +24,6 @@ dataframes = utils.convertStringsMC(dataframes, labels)
 dataframe = pd.concat(dataframes)
 #-----DataFrame-----#
 
-weights = utils.assigngWeights(dataframe)
-
 dataset = Cicids.Cicids2017(dataframe)
 
 input_size = dataset.x.shape[1]
