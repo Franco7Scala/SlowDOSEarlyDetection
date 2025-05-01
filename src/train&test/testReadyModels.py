@@ -45,7 +45,7 @@ weights_tensor = torch.Tensor(weights)
 
 dataset = Cicids.Cicids2017(dataframe)
 
-week_days_datasets = utils.splitWeekDaysDatasets(week_days_lengths, dataset) #splitting dataset into single days dataset
+week_days_datasets = utils.splitWeekDaysDatasets(week_days_lengths, dataset) #splitting dataset into single days subset
 print("Done!")
 
 input_size = dataset.x.shape[1]
@@ -58,8 +58,8 @@ batch_size = 512
 print("Creating train, validation and test dataloaders...")
 trains = []
 tests = []
-for dataset in week_days_datasets:
-        x_train, x_test, y_train, y_test = utils.splitDataset(dataset.x, dataset.y, 0.7, 0.3)
+for subset in week_days_datasets:
+        x_train, x_test, y_train, y_test = utils.splitDataset(subset.dataset.x, subset.dataset.y, 0.7, 0.3)
         trains.append(TensorDataset(x_train, y_train))
         tests.append(TensorDataset(x_test, y_test))
 train = ConcatDataset(trains)
@@ -73,23 +73,14 @@ x_train, y_train = utils.convertDataLoaderToNumpy(train_loader) #numpy for other
 print("Done!")
 #-----Train, Validation and Test DataLoaders-----#
 
-#-----Neural Network models-----#
+epochs = 150
+
+days = ["Tuesday", "Wednesday", "Thursday", "Friday"]
+
+#-----ConcatenatedPredictiveVAE NeuralNetwork-----#
 MC_model = PredictiveNN(input_size, output_size, device)
-
 VAE_model = VAENN(32, input_size, device)
-
 CPVAE_model = ConcatenatedPredictiveVAE(MC_model, VAE_model, input_size + output_size, output_size, device)
-
-knn_model = KNeighborsClassifier()
-
-xgb_model = xgb.XGBClassifier()
-
-rf_model = RandomForestClassifier()
-
-nb_model = GaussianNB()
-
-dt_model = DecisionTreeClassifier()
-#-----Neural Network models-----#
 
 MC_optimizer = torch.optim.Adam(MC_model.parameters(), lr=0.00001)
 VAE_optimizer = torch.optim.Adam(VAE_model.parameters(), lr=0.00001)
@@ -97,10 +88,8 @@ CPVAE_optimizer = torch.optim.Adam(CPVAE_model.parameters(), lr=0.00001)
 
 MC_criterion = torch.nn.CrossEntropyLoss(weight=weights_tensor.to(device))
 CPVAE_criterion = torch.nn.CrossEntropyLoss()
+#-----ConcatenatedPredictiveVAE NeuralNetwork-----#
 
-epochs = 150
-
-days = ["Tuesday", "Wednesday", "Thursday", "Friday"]
 print("Starting concatenatedPredictiveVAE model training...")
 start = time.time()
 #-----MultiClass model training-----#
@@ -118,6 +107,10 @@ end = time.time()
 print("CPVAE done!")
 print(f"Training time: {end - start:.2f} seconds")
 
+#-----KNN NeuralNetwork-----#
+knn_model = KNeighborsClassifier()
+#-----KNN NeuralNetwork-----#
+
 print("Starting KNN model training...")
 knn_start = time.time()
 #-----KNN model training-----#
@@ -126,6 +119,10 @@ knn_model.fit(x_train, y_train)
 knn_end = time.time()
 print("KNN done!")
 print(f"Training time: {knn_end - knn_start:.2f} seconds")
+
+#-----XGBoost NeuralNetwork-----#
+xgb_model = xgb.XGBClassifier()
+#-----XGBoost NeuralNetwork-----#
 
 print("Starting XGBoost model training...")
 xgb_start = time.time()
@@ -136,6 +133,10 @@ xgb_end = time.time()
 print("XGBoost done!")
 print(f"Training time: {xgb_end - xgb_start:.2f} seconds")
 
+#-----RandomForest NeuralNetwork-----#
+rf_model = RandomForestClassifier()
+#-----RandomForest NeuralNetwork-----#
+
 print("Starting RandomForest model training...")
 rf_start = time.time()
 #-----RandomForest model training-----#
@@ -145,6 +146,10 @@ rf_end = time.time()
 print("RandomForest done!")
 print(f"Training time: {rf_end - rf_start:.2f} seconds")
 
+#-----NaiveBayes NeuralNetwork-----#
+nb_model = GaussianNB()
+#-----NaiveBayes NeuralNetwork-----#
+
 print("Starting NaiveBayes model training...")
 nb_start = time.time()
 #-----NaiveBayes model training-----#
@@ -153,6 +158,10 @@ nb_model.fit(x_train, y_train)
 nb_end = time.time()
 print("NaiveBayes done!")
 print(f"Training time: {nb_end - nb_start:.2f} seconds")
+
+#-----DecisionTree NeuralNetwork-----#
+dt_model = DecisionTreeClassifier()
+#-----DecisionTree NeuralNetwork-----#
 
 print("Starting DecisionTree model training...")
 dt_start = time.time()
