@@ -72,7 +72,7 @@ epochs = 150
 #-----MultiClass model training-----#
 print("Starting MultiClass model Training...")
 start = time.time()
-MC_model.fit(epochs, train_loader, validation_loader, MC_optimizer, MC_criterion)
+MC_model.fit(epochs, MC_optimizer, MC_criterion, train_loader, validation_loader)
 MC_model.load_state_dict(torch.load("best_accuracy_scoring_predictive_nn.pt"))
 #-----MultiClass model training-----#
 
@@ -89,7 +89,7 @@ CPVAE_optimizer = torch.optim.Adam(CPVAE_model.parameters(), lr=0.00001)
 
 #-----CPVAE model training-----#
 print("Starting ConcatenatedPredictiveVAE model Training...")
-CPVAE_model.fit(epochs, train_loader, validation_loader, CPVAE_optimizer, CPVAE_criterion)
+CPVAE_model.fit(epochs, CPVAE_optimizer, CPVAE_criterion, train_loader, validation_loader)
 print("Starting Testing...")
 accuracy, precision, recall, f1 = CPVAE_model.evaluate(test_loader, CPVAE_criterion)
 end = time.time()
