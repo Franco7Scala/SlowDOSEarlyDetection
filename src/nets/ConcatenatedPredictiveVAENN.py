@@ -1,6 +1,9 @@
+from typing import Optional
+
 import torch
 import torch.nn as nn
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+from torch.utils.data import DataLoader
 
 
 class ConcatenatedPredictiveVAE(nn.Module):
@@ -77,7 +80,7 @@ class ConcatenatedPredictiveVAE(nn.Module):
             all_preds.extend(predicted.cpu().numpy())
             all_targets.extend(target.cpu().numpy())
 
-        precision = precision_score(all_targets, all_preds, average="weighted")
+        precision = precision_score(all_targets, all_preds, average="weighted", zero_division=0)
         recall = recall_score(all_targets, all_preds, average="weighted")
         f1 = f1_score(all_targets, all_preds, average="weighted")
 
@@ -89,16 +92,17 @@ class ConcatenatedPredictiveVAE(nn.Module):
 
         return accuracy_am.avg, precision_am.avg, recall_am.avg, f1_am.avg
 
-    def fit(self, epochs, train_loader, test_loader, optimizer, criterion):
+    def fit(self, epochs, optimizer, criterion, train_loader, test_loader: Optional[DataLoader] = None):
         accuracy, precision, recall, f1 = 0, 0, 0, 0
         for epoch in range(epochs):
             self._train_epoch(train_loader, optimizer, criterion)
-            accuracy, precision, recall, f1 = self.evaluate(test_loader, criterion)
+            if test_loader is not None:
+                accuracy, precision, recall, f1 = self.evaluate(test_loader, criterion)
             print("epoch:", epoch)
+        print("Finished training CPVAE!")
+        if test_loader is not None:
+            print("Final results:")
             print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
-        print("Finished training!")
-        print("Final results:")
-        print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
 # -----train and test-----#
 
 # da: PlayItStraiht di Francesco Scala

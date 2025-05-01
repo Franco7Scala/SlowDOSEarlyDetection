@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+from typing import Optional
+
+from torch.utils.data import DataLoader
 
 
 class PredictiveNN(nn.Module):
@@ -76,7 +79,7 @@ class PredictiveNN(nn.Module):
             all_preds.extend(predicted.cpu().numpy())
             all_targets.extend(target.cpu().numpy())
 
-        precision = precision_score(all_targets, all_preds, average="weighted")
+        precision = precision_score(all_targets, all_preds, average="weighted", zero_division=0)
         recall = recall_score(all_targets, all_preds, average="weighted")
         f1 = f1_score(all_targets, all_preds, average="weighted")
 
@@ -88,19 +91,20 @@ class PredictiveNN(nn.Module):
 
         return accuracy_am.avg, precision_am.avg, recall_am.avg, f1_am.avg
 
-    def fit(self, epochs, train_loader, test_loader, optimizer, criterion):
+    def fit(self, epochs, optimizer, criterion, train_loader, test_loader: Optional[DataLoader] = None):
         accuracy, precision, recall, f1 = 0, 0, 0, 0
         for epoch in range(epochs):
             self._train_epoch(train_loader, optimizer, criterion)
-            new_accuracy, new_precision, new_recall, new_f1 = self.evaluate(test_loader, criterion)
-            if (new_accuracy > accuracy):
-                accuracy, precision, recall, f1 = new_accuracy, new_precision, new_recall, new_f1
-                self.save("best_accuracy_scoring_predictive_nn.pt")
+            if test_loader is not None:
+                new_accuracy, new_precision, new_recall, new_f1 = self.evaluate(test_loader, criterion)
+                if new_accuracy > accuracy:
+                    accuracy, precision, recall, f1 = new_accuracy, new_precision, new_recall, new_f1
+                    self.save("best_accuracy_scoring_predictive_nn.pt")
             print("epoch:", epoch)
-            print(f"accuracy: {new_accuracy}, precision: {new_precision}, recall: {new_recall}, f1: {new_f1}")
-        print("Finished training!")
-        print("Final results:")
-        print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
+        print("Finished training predictive NN!")
+        if test_loader is not None:
+            print("Final results:")
+            print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
 # -----train and test-----#
 
     def save(self, path):

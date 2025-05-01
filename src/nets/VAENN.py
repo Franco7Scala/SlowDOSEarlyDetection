@@ -1,9 +1,12 @@
+from typing import Optional
+
 import numpy
 import torch
 import pandas
 import torch.nn as nn
 import torch.nn.functional as F
 import plotly.express as px
+from torch.utils.data import DataLoader
 
 from tqdm.autonotebook import tqdm
 from matplotlib import pyplot as plt
@@ -99,17 +102,19 @@ class VAENN(nn.Module):
 
         return numpy.mean(val_losses_per_epoch), numpy.mean(recon_losses_per_epoch)
 
-    def fit(self, epochs, optimizer, train_loader, test_loader):
+    def fit(self, epochs, optimizer, train_loader, test_loader: Optional[DataLoader] = None):
         loss = {"train_loss": [], "val_loss": [], "train_recon_loss": [], "val_recon_loss": []}
         with tqdm(desc="Training", total=epochs) as pbar_outer:
             for epoch in range(epochs):
                 train_loss, train_recon_loss = self._train_epoch(optimizer, train_loader)
-                val_loss, val_recon_loss = self.evaluate(test_loader)
+                if test_loader is not None:
+                    val_loss, val_recon_loss = self.evaluate(test_loader)
                 pbar_outer.update(1)
+                if test_loader is not None:
+                    loss["val_loss"].append(val_loss)
+                    loss["val_recon_loss"].append(val_recon_loss)
                 loss["train_loss"].append(train_loss)
-                loss["val_loss"].append(val_loss)
                 loss["train_recon_loss"].append(train_recon_loss)
-                loss["val_recon_loss"].append(val_recon_loss)
         self.plotVAE(loss)
 
     def plotVAE(self, loss):

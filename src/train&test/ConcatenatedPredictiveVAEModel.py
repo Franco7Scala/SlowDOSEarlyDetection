@@ -3,6 +3,7 @@ import torch
 from sklearn.utils import compute_class_weight
 from torch.utils.data import DataLoader, TensorDataset
 import pandas as pd
+import time
 
 from src.datasets import Cicids
 from src.support import utils
@@ -13,13 +14,14 @@ from src.nets.ConcatenatedPredictiveVAENN import ConcatenatedPredictiveVAE
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 
-paths = ["C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
-        "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Morning.pcap_ISCX.csv",
-        #"C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Monday-WorkingHours.pcap_ISCX.csv",#
-        "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv",
-        "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv",
-        "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Tuesday-WorkingHours.pcap_ISCX.csv",
-        "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Wednesday-workingHours.pcap_ISCX.csv"]
+paths = ["C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
+        "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Morning.pcap_ISCX.csv",
+        "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv",
+        #"C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Monday-WorkingHours.pcap_ISCX.csv",#
+        "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv",
+        "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv",
+        "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Tuesday-WorkingHours.pcap_ISCX.csv",
+        "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Wednesday-workingHours.pcap_ISCX.csv"]
 
 #-----DataFrame-----#
 print("Processing dateset...")
@@ -69,20 +71,14 @@ epochs = 150
 
 #-----MultiClass model training-----#
 print("Starting MultiClass model Training...")
+start = time.time()
 MC_model.fit(epochs, train_loader, validation_loader, MC_optimizer, MC_criterion)
 MC_model.load_state_dict(torch.load("best_accuracy_scoring_predictive_nn.pt"))
-print("Starting Testing...")
-accuracy, precision, recall, f1 = MC_model.evaluate(test_loader, MC_criterion)
-print("Test results:")
-print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
 #-----MultiClass model training-----#
 
 #-----VAE model training-----#
 print("Starting VirtualAutoEncoder model Training...")
 VAE_model.fit(epochs, VAE_optimizer, train_loader, validation_loader)
-print("Starting testing...")
-VAE_model.evaluate(test_loader)
-print("Done!")
 #-----VAE model training-----#
 
 CPVAE_model = ConcatenatedPredictiveVAE(MC_model, VAE_model, input_size + output_size, output_size, device)
@@ -96,6 +92,8 @@ print("Starting ConcatenatedPredictiveVAE model Training...")
 CPVAE_model.fit(epochs, train_loader, validation_loader, CPVAE_optimizer, CPVAE_criterion)
 print("Starting Testing...")
 accuracy, precision, recall, f1 = CPVAE_model.evaluate(test_loader, CPVAE_criterion)
+end = time.time()
 print("Test results:")
 print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
+print(f"Tempo di esecuzione: {end - start:.2f} secondi")
 #-----CPVAE model training-----#

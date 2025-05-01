@@ -5,11 +5,11 @@ import random
 import os
 
 from sklearn.model_selection import StratifiedShuffleSplit
-from sklearn.utils import compute_class_weight
+from torch.utils.data import Dataset, Subset, DataLoader
 
 
 #-----datasets utils-----#
-def stringLabels(dataFrames: [pd.DataFrame]) -> []:
+def stringLabels(dataFrames: list[pd.DataFrame]) -> list[str]:
     ret = []
     for df in dataFrames:
         label = df[' Label'].unique()
@@ -18,14 +18,14 @@ def stringLabels(dataFrames: [pd.DataFrame]) -> []:
                 ret.append(string)
     return ret
 
-def readPaths(paths: []) -> []:
+def readPaths(paths: list[str]) -> list[pd.DataFrame]:
     ret = []
     for path in paths:
         df = pd.read_csv(path)
         ret.append(df)
     return ret
 
-def convertStringsTC(dataFrames: [pd.DataFrame], labels: []) -> []:
+def convertStringsTC(dataFrames: list[pd.DataFrame], labels: list[str]) -> list[pd.DataFrame]:
     ret = []
     for df in dataFrames:
         for string in labels:
@@ -36,7 +36,7 @@ def convertStringsTC(dataFrames: [pd.DataFrame], labels: []) -> []:
         ret.append(df)
     return ret
 
-def convertStringsMC(dataFrames: [pd.DataFrame], labels: []) -> []:
+def convertStringsMC(dataFrames: list[pd.DataFrame], labels: list[str]) -> list[pd.DataFrame]:
     ret = []
     value = 0
     for df in dataFrames:
@@ -86,7 +86,6 @@ def splitDataset(data: torch.Tensor, target: torch.Tensor, size1: float, size2: 
         x_train, x_test = data[train_index], data[test_index]
         y_train, y_test = target[train_index], target[test_index]
     return x_train, x_test, y_train, y_test
-#-----datasets utils-----#
 
 def seed_everything(seed):
     random.seed(seed)
@@ -96,4 +95,42 @@ def seed_everything(seed):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-    
+
+def getWeekDaysLengths(paths: list[str]) -> list[int]:
+    ret = []
+    fridayPaths, thursdayPaths, tuesdayPaths, wednesdayPaths = [], [], [], []
+    for path in paths:
+        if "Thursday" in path:
+            thursdayPaths.append(path)
+        if "Wednesday" in path:
+            wednesdayPaths.append(path)
+        if "Tuesday" in path:
+            tuesdayPaths.append(path)
+        if "Friday" in path:
+            fridayPaths.append(path)
+    ret.append(len(pd.concat(readPaths(thursdayPaths))))
+    ret.append(len(pd.concat(readPaths(wednesdayPaths))))
+    ret.append(len(pd.concat(readPaths(tuesdayPaths))))
+    ret.append(len(pd.concat(readPaths(fridayPaths))))
+    return ret
+
+def splitWeekDaysDatasets(lengths: list[int], dataset: Dataset) -> (Dataset, Dataset, Dataset, Dataset):
+    ret = []
+    start = 0
+    for length in lengths:
+        end = start + length
+        ret.append(Subset(dataset, range(start, end)))
+        start = end + 1
+    return ret
+
+def convertDataLoaderToNumpy(loader: DataLoader) -> (np.ndarray, np.ndarray):
+    x_list = []
+    y_list = []
+    for batch in loader:
+        input, labels = batch
+        x_list.append(input.numpy())
+        y_list.append(labels.numpy())
+    x = np.concatenate(x_list)
+    y = np.concatenate(y_list)
+    return x, y
+#-----datasets utils-----#
