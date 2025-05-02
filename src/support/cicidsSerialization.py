@@ -1,10 +1,9 @@
 import pickle
-
 import numpy as np
 import pandas as pd
 import torch
 from sklearn.utils import compute_class_weight
-from torch.utils.data import TensorDataset, DataLoader, ConcatDataset
+from torch.utils.data import TensorDataset, DataLoader, ConcatDataset, Subset
 
 from src.datasets import Cicids
 from src.support import utils
@@ -32,7 +31,7 @@ weights_tensor = torch.Tensor(weights)
 
 dataset = Cicids.Cicids2017(dataframe)
 
-week_days_datasets = utils.splitWeekDaysDatasets(week_days_lengths, dataset) #splitting dataset into single days subset
+week_days_datasets = utils.splitWeekDaysDatasets(week_days_lengths, dataset) #splitting dataset into single-days subset
 print("Done!")
 
 input_size = dataset.x.shape[1]
@@ -46,7 +45,9 @@ print("Creating train, validation and test dataloaders...")
 trains = []
 tests = []
 for subset in week_days_datasets:
-        x_train, x_test, y_train, y_test = utils.splitDataset(subset.dataset.x, subset.dataset.y, 0.7, 0.3)
+        x = subset.dataset.x[subset.indices]
+        y = subset.dataset.y[subset.indices]
+        x_train, x_test, y_train, y_test = utils.splitDataset(x, y, 0.7, 0.3)
         trains.append(TensorDataset(x_train, y_train))
         tests.append(TensorDataset(x_test, y_test))
 train = ConcatDataset(trains)

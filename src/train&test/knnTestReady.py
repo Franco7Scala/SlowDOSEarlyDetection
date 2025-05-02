@@ -1,9 +1,12 @@
 import pickle
 import time
+import os
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.neighbors import KNeighborsClassifier
 
 from src.support import utils
+
+os.environ['OMP_NUM_THREADS'] = '1'
 
 utils.seed_everything(1) #seed
 
@@ -12,15 +15,16 @@ days = ["Tuesday", "Wednesday", "Thursday", "Friday"]
 test_loaders = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/test_loaders.pkl', 'rb'))
 x_train = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/x_train.pkl', 'rb'))
 y_train = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/y_train.pkl', 'rb'))
+weights = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/weights_tensor.pkl', 'rb'))
 
 #-----KNN model-----#
-knn_model = KNeighborsClassifier()
+knn_model = KNeighborsClassifier(weights=weights, n_neighbors=5)
 #-----KNN model-----#
 
 print("Starting KNN model training...")
 knn_start = time.time()
 #-----KNN model training-----#
-knn_model.fit(x_train, y_train)
+knn_model.fit(x_train, y_train.ravel())
 #-----KNN model training-----#
 knn_end = time.time()
 print("KNN done!")

@@ -100,17 +100,17 @@ def getWeekDaysLengths(paths: list[str]) -> list[int]:
     ret = []
     fridayPaths, thursdayPaths, tuesdayPaths, wednesdayPaths = [], [], [], []
     for path in paths:
-        if "Thursday" in path:
-            thursdayPaths.append(path)
-        if "Wednesday" in path:
-            wednesdayPaths.append(path)
         if "Tuesday" in path:
             tuesdayPaths.append(path)
+        if "Wednesday" in path:
+            wednesdayPaths.append(path)
+        if "Thursday" in path:
+            thursdayPaths.append(path)
         if "Friday" in path:
             fridayPaths.append(path)
-    ret.append(len(pd.concat(readPaths(thursdayPaths))))
-    ret.append(len(pd.concat(readPaths(wednesdayPaths))))
     ret.append(len(pd.concat(readPaths(tuesdayPaths))))
+    ret.append(len(pd.concat(readPaths(wednesdayPaths))))
+    ret.append(len(pd.concat(readPaths(thursdayPaths))))
     ret.append(len(pd.concat(readPaths(fridayPaths))))
     return ret
 
@@ -118,9 +118,9 @@ def splitWeekDaysDatasets(lengths: list[int], dataset: Dataset) -> (Dataset, Dat
     ret = []
     start = 0
     for length in lengths:
-        end = start + length
+        end = start + length - 1
         ret.append(Subset(dataset, range(start, end)))
-        start = end + 1
+        start = end
     return ret
 
 def convertDataLoaderToNumpy(loader: DataLoader) -> (np.ndarray, np.ndarray):
