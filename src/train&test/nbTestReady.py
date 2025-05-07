@@ -9,9 +9,10 @@ utils.seed_everything(1) #seed
 
 days = ["Tuesday", "Wednesday", "Thursday", "Friday"]
 
-test_loaders = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/test_loaders.pkl', 'rb'))
-x_train = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/x_train.pkl', 'rb'))
-y_train = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/y_train.pkl', 'rb'))
+test_loaders = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/test_loaders.pkl', 'rb'))
+x_train = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/x_train.pkl', 'rb'))
+y_train = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/y_train.pkl', 'rb'))
+weights = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/weights_tensor.pkl', 'rb'))
 
 #-----NaiveBayes model-----#
 nb_model = GaussianNB()
@@ -31,8 +32,8 @@ for i in range(len(test_loaders)):
     print(f"Starting {days[i]} NaiveBayes testing...")
     nb_pred = nb_model.predict(x_test)
     nb_accuracy = accuracy_score(y_test, nb_pred)
-    nb_precision = precision_score(y_test, nb_pred)
-    nb_recall = recall_score(y_test, nb_pred)
-    nb_f1 = f1_score(y_test, nb_pred)
+    nb_precision = precision_score(y_test, nb_pred, average="weighted")
+    nb_recall = recall_score(y_test, nb_pred, average="weighted")
+    nb_f1 = f1_score(y_test, nb_pred, average="weighted")
     print("NaiveBayes test results:")
     print(f"accuracy: {nb_accuracy}, precision: {nb_precision}, recall: {nb_recall}, f1: {nb_f1}")

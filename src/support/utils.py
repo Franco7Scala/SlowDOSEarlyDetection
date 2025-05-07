@@ -4,9 +4,8 @@ import torch
 import random
 import os
 
-from sklearn.model_selection import StratifiedShuffleSplit
-from torch.utils.data import Dataset, Subset, DataLoader
-
+from sklearn.model_selection import StratifiedShuffleSplit, train_test_split
+from torch.utils.data import Dataset, Subset, DataLoader, ConcatDataset, TensorDataset
 
 #-----datasets utils-----#
 def stringLabels(dataFrames: list[pd.DataFrame]) -> list[str]:
@@ -87,6 +86,13 @@ def splitDataset(data: torch.Tensor, target: torch.Tensor, size1: float, size2: 
         y_train, y_test = target[train_index], target[test_index]
     return x_train, x_test, y_train, y_test
 
+def stratifiedSampling(dataset, target: torch.Tensor, train_size: float) -> (Subset, Subset):
+    train_index, validation_index = train_test_split(np.arange(len(dataset)), train_size=train_size, random_state=999, shuffle=True, stratify=target)
+
+    train_dataset = Subset(dataset, train_index)
+    validation_dataset = Subset(dataset, validation_index)
+    return train_dataset, validation_dataset
+
 def seed_everything(seed):
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -133,4 +139,44 @@ def convertDataLoaderToNumpy(loader: DataLoader) -> (np.ndarray, np.ndarray):
     x = np.concatenate(x_list)
     y = np.concatenate(y_list)
     return x, y
+
+def extract_xy_from_concat(dataset: ConcatDataset):
+    x_list = []
+    y_list = []
+
+    for d in dataset.datasets:
+        # Se è un Subset
+        if isinstance(d, Subset):
+            base_ds = d.dataset
+            indices = d.indices
+            x_list.append(base_ds[0][indices])
+            y_list.append(base_ds[1][indices])
+        # Se è un TensorDataset diretto
+        elif isinstance(d, TensorDataset):
+            x_list.append(d.tensors[0])
+            y_list.append(d.tensors[1])
+        else:
+            raise TypeError(f"Unsupported dataset type: {type(d)}")
+
+    x = torch.cat(x_list, dim=0)
+    y = torch.cat(y_list, dim=0)
+
+    assert len(x) == len(y), f"x and y have different lengths: {len(x)} != {len(y)}"
+
+    return x, y
+
+def duplicateClass(dataset, class_to_dup: float, times_to_dup):
+    x_new = []
+    y_new = []
+
+    for i in range(len(dataset.x)):
+        x_new.append(dataset.x[i].unsqueeze(0))
+        y_new.append(dataset.y[i].unsqueeze(0))
+        if dataset.y[i].item() == class_to_dup:
+            for _ in range(times_to_dup):
+                x_new.append(dataset.x[i].unsqueeze(0))
+                y_new.append(dataset.y[i].unsqueeze(0))
+
+    dataset.x = torch.cat(x_new, dim=0)
+    dataset.y = torch.cat(y_new, dim=0)
 #-----datasets utils-----#

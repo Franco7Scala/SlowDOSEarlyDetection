@@ -12,13 +12,13 @@ utils.seed_everything(1) #seed
 
 days = ["Tuesday", "Wednesday", "Thursday", "Friday"]
 
-test_loaders = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/test_loaders.pkl', 'rb'))
-x_train = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/x_train.pkl', 'rb'))
-y_train = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/y_train.pkl', 'rb'))
-weights = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/weights_tensor.pkl', 'rb'))
+test_loaders = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/test_loaders.pkl', 'rb'))
+x_train = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/x_train.pkl', 'rb'))
+y_train = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/y_train.pkl', 'rb'))
+weights = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/weights_tensor.pkl', 'rb'))
 
 #-----KNN model-----#
-knn_model = KNeighborsClassifier(weights=weights, n_neighbors=5)
+knn_model = KNeighborsClassifier(n_neighbors=3)
 #-----KNN model-----#
 
 print("Starting KNN model training...")
@@ -35,8 +35,8 @@ for i in range(len(test_loaders)):
     print(f"Starting {days[i]} KNN testing...")
     knn_pred = knn_model.predict(x_test)
     knn_accuracy = accuracy_score(y_test, knn_pred)
-    knn_precision = precision_score(y_test, knn_pred)
-    knn_recall = recall_score(y_test, knn_pred)
-    knn_f1 = f1_score(y_test, knn_pred)
+    knn_precision = precision_score(y_test, knn_pred, average='weighted')
+    knn_recall = recall_score(y_test, knn_pred, average='weighted')
+    knn_f1 = f1_score(y_test, knn_pred, average='weighted')
     print("KNN test results:")
     print(f"accuracy: {knn_accuracy}, precision: {knn_precision}, recall: {knn_recall}, f1: {knn_f1}")

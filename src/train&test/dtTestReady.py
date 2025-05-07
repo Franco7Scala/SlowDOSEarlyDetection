@@ -9,12 +9,13 @@ utils.seed_everything(1) #seed
 
 days = ["Tuesday", "Wednesday", "Thursday", "Friday"]
 
-test_loaders = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/test_loaders.pkl', 'rb'))
-x_train = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/x_train.pkl', 'rb'))
-y_train = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/y_train.pkl', 'rb'))
+test_loaders = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/test_loaders.pkl', 'rb'))
+x_train = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/x_train.pkl', 'rb'))
+y_train = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/y_train.pkl', 'rb'))
+weights = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/weights_tensor.pkl', 'rb'))
 
 #-----DecisionTree model-----#
-dt_model = DecisionTreeClassifier()
+dt_model = DecisionTreeClassifier(max_leaf_nodes=3)
 #-----DecisionTree model-----#
 
 print("Starting DecisionTree model training...")
@@ -31,8 +32,8 @@ for i in range(len(test_loaders)):
     print(f"Starting {days[i]} DecisionTree testing...")
     dt_pred = dt_model.predict(x_test)
     dt_accuracy = accuracy_score(y_test, dt_pred)
-    dt_precision = precision_score(y_test, dt_pred)
-    dt_recall = recall_score(y_test, dt_pred)
-    dt_f1 = f1_score(y_test, dt_pred)
+    dt_precision = precision_score(y_test, dt_pred, average="weighted")
+    dt_recall = recall_score(y_test, dt_pred, average="weighted")
+    dt_f1 = f1_score(y_test, dt_pred, average="weighted")
     print("DecisionTree test results:")
     print(f"accuracy: {dt_accuracy}, precision: {dt_precision}, recall: {dt_recall}, f1: {dt_f1}")
