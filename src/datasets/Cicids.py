@@ -1,13 +1,16 @@
+from typing import Optional
+
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from src.support.utils import removeCollinearFeatures, normalizeValues
 
 class Cicids2017(Dataset):
-    def __init__(self, xy: pd.DataFrame):
-        self.xy = xy.drop([' Destination Port'], axis="columns")
-        self.xy = normalizeValues(xy)
-        self.xy = removeCollinearFeatures(xy, 0.95)
+    def __init__(self, xy: pd.DataFrame, preprocessData: Optional[bool] = False):
+        if preprocessData:
+            self.xy = xy.drop([' Destination Port'], axis="columns")
+            self.xy = normalizeValues(xy)
+            self.xy = removeCollinearFeatures(xy, 0.95)
 
         self.x = torch.tensor(self.xy.to_numpy()).float() #54 columns
         self.y = torch.tensor(self.xy[[' Label']].to_numpy()).float()

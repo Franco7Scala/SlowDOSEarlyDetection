@@ -11,10 +11,10 @@ utils.seed_everything(1) #seed
 
 days = ["Tuesday", "Wednesday", "Thursday", "Friday"]
 
-test_loaders = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/test_loaders.pkl', 'rb'))
-x_train = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/x_train.pkl', 'rb'))
-y_train = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/y_train.pkl', 'rb'))
-weights = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/weights_tensor.pkl', 'rb'))
+test_loaders = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/test_loaders.pkl', 'rb'))
+x_train = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/x_train.pkl', 'rb'))
+y_train = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/y_train.pkl', 'rb'))
+weights = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/weights_tensor.pkl', 'rb'))
 
 #-----XGBoost model-----#
 xgb_model = xgb.XGBClassifier(n_estimators=80)

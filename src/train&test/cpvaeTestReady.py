@@ -12,13 +12,13 @@ utils.seed_everything(1) #seed
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 
-input_size = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/input_size.pkl', 'rb'))
-output_size = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/output_size.pkl', 'rb'))
-weights = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/weights_tensor.pkl', 'rb'))
-train_loader = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/train_loader.pkl', 'rb'))
-test_loaders = pickle.load(open('C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files/test_loaders.pkl', 'rb'))
+input_size = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/input_size.pkl', 'rb'))
+output_size = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/output_size.pkl', 'rb'))
+weights = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/weights_tensor.pkl', 'rb'))
+train_loader = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/train_loader.pkl', 'rb'))
+test_loaders = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/test_loaders.pkl', 'rb'))
 
-epochs = 150
+epochs = 500
 
 days = ["Tuesday", "Wednesday", "Thursday", "Friday"]
 

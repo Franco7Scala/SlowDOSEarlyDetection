@@ -11,18 +11,17 @@ from src.nets.PredictiveNN import PredictiveNN
 from src.nets.VAENN import VAENN
 from src.nets.ConcatenatedPredictiveVAENN import ConcatenatedPredictiveVAE
 
-#random_seed
-
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 
-paths = ["C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Tuesday-WorkingHours.pcap_ISCX.csv",
-         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Wednesday-workingHours.pcap_ISCX.csv",
-         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv",
-         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv",
-         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
-         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Morning.pcap_ISCX.csv",
-         "C:/Users/black/OneDrive/Desktop/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv"]
+paths = ["C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
+        "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Morning.pcap_ISCX.csv",
+        "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv",
+        #"C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Monday-WorkingHours.pcap_ISCX.csv",#
+        "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv",
+        "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv",
+        "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Tuesday-WorkingHours.pcap_ISCX.csv",
+        "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Wednesday-workingHours.pcap_ISCX.csv"]
 
 #-----DataFrame-----#
 print("Processing dateset...")

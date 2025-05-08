@@ -179,4 +179,49 @@ def duplicateClass(dataset, class_to_dup: float, times_to_dup):
 
     dataset.x = torch.cat(x_new, dim=0)
     dataset.y = torch.cat(y_new, dim=0)
+
+from collections import defaultdict
+import random
+from torch.utils.data import Subset
+
+def createCustomTrainset(dataset, K, H):
+    num_classes = 14
+    n_per_class = K // num_classes
+    class_indices = defaultdict(list)
+
+    # Raccogli tutti gli indici organizzati per classe
+    for idx, (_, label) in enumerate(dataset):
+        class_indices[int(label)].append(idx)
+
+    # Controlla che ogni classe abbia abbastanza esempi
+    for cls in range(0, num_classes + 1):
+        needed = n_per_class + (H if cls == 0 else 0)
+        if len(class_indices[cls]) < needed:
+            raise ValueError(f"Classe {cls} ha solo {len(class_indices[cls])} esempi, ma ne servono {needed}")
+
+    # Seleziona gli indici per ciascuna classe
+    selected_indices = []
+    used_in_target_class = set()
+
+    for cls in range(0, num_classes + 1):
+        indices = class_indices[cls]
+        random.shuffle(indices)
+        count = n_per_class + (H if cls == 0 else 0)
+        selected = indices[:count]
+        selected_indices.extend(selected)
+
+        # Salva quali hai già usato nella target class (per evitare duplicati se vuoi)
+        if cls == 0:
+            used_in_target_class.update(selected[:n_per_class])
+
+    # Costruisci liste finali di dati e label
+    data_list = []
+    label_list = []
+    for idx in selected_indices:
+        x, y = dataset[idx]
+        data_list.append(x)
+        label_list.append(y)
+
+    # Se vuoi, puoi anche restituire tensori concatenati
+    return torch.stack(data_list), torch.tensor(label_list)
 #-----datasets utils-----#
