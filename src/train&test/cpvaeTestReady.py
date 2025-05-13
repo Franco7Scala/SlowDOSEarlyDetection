@@ -18,7 +18,7 @@ weights = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/weights
 train_loader = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/train_loader.pkl', 'rb'))
 test_loaders = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/test_loaders.pkl', 'rb'))
 
-epochs = 500
+epochs = 257
 
 days = ["Tuesday", "Wednesday", "Thursday", "Friday"]
 
