@@ -10,7 +10,7 @@ import random
 
 
 def get_base_dir():
-    return "/home/scala/projects/SlowDosDetection/data"
+    return "C:/Users/black/OneDrive/Desktop/Università/Tesi/cicids2017/csvs\MachineLearningCSV"
 
 
 #-----datasets utils-----#

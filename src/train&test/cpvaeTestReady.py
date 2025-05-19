@@ -2,6 +2,7 @@ import torch
 import time
 import pickle
 
+from src.nets.PredictiveExtendedNN import PredictiveExtendedNN
 from src.support import utils
 from src.nets.PredictiveNN import PredictiveNN
 from src.nets.VAENN import VAENN
@@ -27,7 +28,7 @@ dim_code = 4
 
 #-----ConcatenatedPredictiveVAE NeuralNetwork-----#
 MC_model = PredictiveNN(input_size, output_size, device, 0.05)
-MC_model_extended = PredictiveNN(input_size, output_size, device, 0.05)
+MC_model_extended = PredictiveExtendedNN(input_size, output_size, device, 0.05)
 VAE_model = VAENN(dim_code, input_size, device)
 CPVAE_model = ConcatenatedPredictiveVAE(MC_model, MC_model_extended, VAE_model, dim_code + (output_size * 2), output_size, device)
 
@@ -50,7 +51,7 @@ VAE_model.fit(150, VAE_optimizer, ddos_train_loader)
 #-----VAE model training-----#
 
 #-----CPVAE model training-----#
-CPVAE_model.fit(epochs, CPVAE_optimizer, CPVAE_criterion, ddos_train_loader)
+CPVAE_model.fit(50, CPVAE_optimizer, CPVAE_criterion, ddos_train_loader)
 #-----CPVAE model training-----#
 
 for param in MC_model.parameters():

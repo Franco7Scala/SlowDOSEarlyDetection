@@ -24,11 +24,11 @@ class ConcatenatedPredictiveVAE(nn.Module):
         )
         self.to(self.device)
 
-    def forward(self, x1, x2, x3):
-        x1 = self.model1(x1)
-        x2 = self.model2(x2)
-        x3 = self.model3.encode(x3)
-        x = torch.cat((x1, x2), dim=1)
+    def forward(self, x):
+        x1 = self.model1(x)
+        x2 = self.model2(x)
+        x3 = self.model3.encode(x)
+        x = torch.cat((x1, x2, x3), dim=1)
         logits = self.fully_connected_1(x)
         return logits
 
@@ -54,10 +54,8 @@ class ConcatenatedPredictiveVAE(nn.Module):
         for i, content in enumerate(train_loader):
             optimizer.zero_grad()
             target = content[1].to(self.device).view(-1).long()
-            input1 = content[0].to(self.device)
-            input2 = content[0].to(self.device)
-            input3 = content[0].to(self.device)
-            output = self(input1, input2, input3)
+            input = content[0].to(self.device)
+            output = self(input)
             loss = criterion(output, target)
             loss.backward()
             #torch.nn.utils.clip_grad_norm_(self.parameters(), 0.5)
