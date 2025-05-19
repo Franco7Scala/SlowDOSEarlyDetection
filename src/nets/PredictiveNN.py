@@ -1,5 +1,5 @@
 import math
-
+from tqdm import tqdm
 import torch
 import torch.nn as nn
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
@@ -93,14 +93,14 @@ class PredictiveNN(nn.Module):
 
     def fit(self, epochs, optimizer, criterion, train_loader, test_loader: Optional[DataLoader] = None):
         accuracy, precision, recall, f1 = 0, 0, 0, 0
-        for epoch in range(epochs):
+        for epoch in tqdm(range(epochs)):
             self._train_epoch(train_loader, optimizer, criterion)
             if test_loader is not None:
                 new_accuracy, new_precision, new_recall, new_f1 = self.evaluate(test_loader, criterion)
                 if new_accuracy > accuracy:
                     accuracy, precision, recall, f1 = new_accuracy, new_precision, new_recall, new_f1
                     self.save("best_accuracy_scoring_predictive_nn.pt")
-            print("epoch:", epoch)
+
         print("Finished training predictive NN!")
         if test_loader is not None:
             print("Final results:")

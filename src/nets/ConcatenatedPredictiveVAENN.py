@@ -1,5 +1,6 @@
 from typing import Optional
 
+from tqdm import tqdm
 import torch
 import torch.nn as nn
 from matplotlib import pyplot as plt
@@ -104,12 +105,12 @@ class ConcatenatedPredictiveVAE(nn.Module):
     def fit(self, epochs, optimizer, criterion, train_loader, test_loader: Optional[DataLoader] = None):
         train_losses_per_epoch = []
         accuracy, precision, recall, f1 = 0, 0, 0, 0
-        for epoch in range(epochs):
+        for epoch in tqdm(range(epochs)):
             avg_loss = self._train_epoch(train_loader, optimizer, criterion)
             train_losses_per_epoch.append(avg_loss)
             if test_loader is not None:
                 accuracy, precision, recall, f1, cr = self.evaluate(test_loader, criterion)
-            print("epoch:", epoch)
+
         print("Finished training CPVAE!")
         if test_loader is not None:
             print("Final results:")

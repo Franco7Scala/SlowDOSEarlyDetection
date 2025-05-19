@@ -1,5 +1,6 @@
 from typing import Optional
 
+from tqdm import tqdm
 import numpy
 import torch
 import pandas
@@ -105,7 +106,7 @@ class VAENN(nn.Module):
     def fit(self, epochs, optimizer, train_loader, test_loader: Optional[DataLoader] = None):
         loss = {"train_loss": [], "val_loss": [], "train_recon_loss": [], "val_recon_loss": []}
         with tqdm(desc="Training", total=epochs) as pbar_outer:
-            for epoch in range(epochs):
+            for epoch in tqdm(range(epochs)):
                 train_loss, train_recon_loss = self._train_epoch(optimizer, train_loader)
                 if test_loader is not None:
                     val_loss, val_recon_loss = self.evaluate(test_loader)
