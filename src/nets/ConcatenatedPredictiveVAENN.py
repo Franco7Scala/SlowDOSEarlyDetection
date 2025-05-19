@@ -9,23 +9,25 @@ from torch.utils.data import DataLoader
 
 class ConcatenatedPredictiveVAE(nn.Module):
 
-    def __init__(self, model1, model2, input_size, output_size, device):
+    def __init__(self, model1, model2, model3, input_size, output_size, device):
         super(ConcatenatedPredictiveVAE, self).__init__()
         self.device = device
         self.model1 = model1
         self.model2 = model2
+        self.model3 = model3
         self.fully_connected_1 = nn.Sequential(
-            nn.Linear(input_size, 128),
+            nn.Linear(input_size, 64),
             nn.ReLU(),
-            nn.Linear(128, 64),
+            nn.Linear(64, 64),
             nn.ReLU(),
             nn.Linear(64, output_size),
         )
         self.to(self.device)
 
-    def forward(self, x1, x2):
+    def forward(self, x1, x2, x3):
         x1 = self.model1(x1)
-        x2 = self.model2.encode(x2)
+        x2 = self.model2(x2)
+        x3 = self.model3.encode(x3)
         x = torch.cat((x1, x2), dim=1)
         logits = self.fully_connected_1(x)
         return logits
@@ -34,14 +36,17 @@ class ConcatenatedPredictiveVAE(nn.Module):
     def _train_epoch(self, train_loader, optimizer, criterion):
         self.train()
 
-        #-----freeze model1 and model2-----#
+        #-----freeze model1, model2 and model3-----#
         self.model1.eval()
         self.model2.eval()
+        self.model3.eval()
         for param in self.model1.parameters():
             param.requires_grad = False
         for param in self.model2.parameters():
             param.requires_grad = False
-        # -----freeze model1 and model2-----#
+        for param in self.model3.parameters():
+            param.requires_grad = False
+        # -----freeze model1, model2 and model3-----#
 
         loss_sum = 0
         count = 0
@@ -51,7 +56,8 @@ class ConcatenatedPredictiveVAE(nn.Module):
             target = content[1].to(self.device).view(-1).long()
             input1 = content[0].to(self.device)
             input2 = content[0].to(self.device)
-            output = self(input1, input2)
+            input3 = content[0].to(self.device)
+            output = self(input1, input2, input3)
             loss = criterion(output, target)
             loss.backward()
             #torch.nn.utils.clip_grad_norm_(self.parameters(), 0.5)

@@ -25,9 +25,10 @@ epochs = 200
 dim_code = 4
 
 #-----ConcatenatedPredictiveVAE NeuralNetwork-----#
-MC_model = PredictiveNN(input_size, output_size, device)
+MC_model = PredictiveNN(input_size, output_size, device, 0.05)
+MC_model_extended = PredictiveNN(input_size, output_size, device, 0.05)
 VAE_model = VAENN(dim_code, input_size, device)
-CPVAE_model = ConcatenatedPredictiveVAE(MC_model, VAE_model, dim_code + output_size, output_size, device)
+CPVAE_model = ConcatenatedPredictiveVAE(MC_model, MC_model_extended, VAE_model, dim_code + (output_size * 2), output_size, device)
 
 MC_optimizer = torch.optim.Adam(MC_model.parameters(), lr=0.00001)
 VAE_optimizer = torch.optim.Adam(VAE_model.parameters(), lr=0.00001)
