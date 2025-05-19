@@ -8,6 +8,11 @@ from torch.utils.data import Dataset, Subset, DataLoader, ConcatDataset, TensorD
 from collections import defaultdict
 import random
 
+
+def get_base_dir():
+    return "/home/scala/projects/SlowDosDetection/data"
+
+
 #-----datasets utils-----#
 def stringLabels(dataFrames: list[pd.DataFrame]) -> list[str]:
     ret = []

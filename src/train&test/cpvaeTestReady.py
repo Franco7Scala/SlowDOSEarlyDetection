@@ -6,19 +6,20 @@ from src.support import utils
 from src.nets.PredictiveNN import PredictiveNN
 from src.nets.VAENN import VAENN
 from src.nets.ConcatenatedPredictiveVAENN import ConcatenatedPredictiveVAE
+from src.support.utils import get_base_dir
 
 utils.seed_everything(1) #seed
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 
-input_size = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/input_size.pkl', 'rb'))
+input_size = pickle.load(open(f"{get_base_dir()}/files/input_size.pkl", 'rb'))
 output_size = 2
-ddos_weights = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/ddos_weights.pkl', 'rb'))
-slowdos_weights = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/slowdos_weights.pkl', 'rb'))
-ddos_train_loader = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/ddos_train_loader.pkl', 'rb'))
-slowdos_train_loader = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/slowdos_train_loader.pkl', 'rb'))
-slowdos_test_loader = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/slowdos_test_loader.pkl', 'rb'))
+ddos_weights = pickle.load(open(f"{get_base_dir()}/files/ddos_weights.pkl", 'rb'))
+slowdos_weights = pickle.load(open(f"{get_base_dir()}/files/slowdos_weights.pkl", 'rb'))
+ddos_train_loader = pickle.load(open(f"{get_base_dir()}/files/ddos_train_loader.pkl", 'rb'))
+slowdos_train_loader = pickle.load(open(f"{get_base_dir()}/files/slowdos_train_loader.pkl", 'rb'))
+slowdos_test_loader = pickle.load(open(f"{get_base_dir()}/files/slowdos_test_loader.pkl", 'rb'))
 
 epochs = 200
 

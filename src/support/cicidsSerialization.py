@@ -2,17 +2,18 @@ import pickle
 import numpy as np
 import pandas as pd
 import torch
+
 from sklearn.utils import compute_class_weight
 from torch.utils.data import TensorDataset, DataLoader
-
 from src.datasets import Cicids
 from src.support import utils
+from src.support.utils import get_base_dir
 
 paths = [#"C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Tuesday-WorkingHours.pcap_ISCX.csv",
-         "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Wednesday-workingHours.pcap_ISCX.csv",
+         f"{get_base_dir()}/MachineLearningCVE/Wednesday-workingHours.pcap_ISCX.csv",
          #"C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv",
          #"C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv",
-         "C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
+         f"{get_base_dir()}/MachineLearningCVE/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
          #"C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Morning.pcap_ISCX.csv",
          #"C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv"
          ]
@@ -67,35 +68,35 @@ x_test_slowdos, y_test_slowdos = utils.convertDataLoaderToNumpy(slowdos_test_loa
 print("Done!")
 #-----Train, Validation and Test DataLoaders-----#
 
-with (open("C:/Coding/PyCharm Projects/src/support/files/slowdos_test_loader.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/files/slowdos_test_loader.pkl", "wb")) as f:
     pickle.dump(slowdos_test_loader, f)
 
-with (open("C:/Coding/PyCharm Projects/src/support/files/input_size.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/files/input_size.pkl", "wb")) as f:
     pickle.dump(input_size, f)
 
-with (open("C:/Coding/PyCharm Projects/src/support/files/output_size.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/files/output_size.pkl", "wb")) as f:
     pickle.dump(output_size, f)
 
-with (open("C:/Coding/PyCharm Projects/src/support/files/ddos_weights.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/files/ddos_weights.pkl", "wb")) as f:
     pickle.dump(ddos_weights, f)
 
-with (open("C:/Coding/PyCharm Projects/src/support/files/slowdos_weights.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/files/slowdos_weights.pkl", "wb")) as f:
     pickle.dump(slodos_weights, f)
 
-with (open("C:/Coding/PyCharm Projects/src/support/files/ddos_train_loader.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/files/ddos_train_loader.pkl", "wb")) as f:
     pickle.dump(ddos_train_loader, f)
 
-with (open("C:/Coding/PyCharm Projects/src/support/files/slowdos_train_loader.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/files/slowdos_train_loader.pkl", "wb")) as f:
     pickle.dump(slowdos_train_loader, f)
 
-with (open("C:/Coding/PyCharm Projects/src/support/files/x_train_slowdos.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/files/x_train_slowdos.pkl", "wb")) as f:
     pickle.dump(x_train_slowdos, f)
 
-with (open("C:/Coding/PyCharm Projects/src/support/files/y_train_slowdos.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/files/y_train_slowdos.pkl", "wb")) as f:
     pickle.dump(y_train_slowdos, f)
 
-with (open("C:/Coding/PyCharm Projects/src/support/files/x_test_slowdos.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/files/x_test_slowdos.pkl", "wb")) as f:
     pickle.dump(x_test_slowdos, f)
 
-with (open("C:/Coding/PyCharm Projects/src/support/files/y_test_slowdos.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/files/y_test_slowdos.pkl", "wb")) as f:
     pickle.dump(y_test_slowdos, f)
