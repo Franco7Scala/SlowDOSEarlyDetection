@@ -1,11 +1,12 @@
 import numpy as np
 import pandas as pd
 import torch
-import random
 import os
 
 from sklearn.model_selection import StratifiedShuffleSplit, train_test_split
 from torch.utils.data import Dataset, Subset, DataLoader, ConcatDataset, TensorDataset
+from collections import defaultdict
+import random
 
 #-----datasets utils-----#
 def stringLabels(dataFrames: list[pd.DataFrame]) -> list[str]:
@@ -46,6 +47,19 @@ def convertStringsMC(dataFrames: list[pd.DataFrame], labels: list[str]) -> list[
                 if string in df.values:
                     value += 1
                     df = df.replace(string, value)
+        ret.append(df)
+    return ret
+
+def convertStringsSD(dataFrames: list[pd.DataFrame], labels: list[str]) -> list[pd.DataFrame]:
+    ret = []
+    for df in dataFrames:
+        for string in labels:
+            if string == "DDoS":
+                df = df.replace(string, 1)
+            elif string == "DoS Slowhttptest" or string == "DoS slowloris":
+                df = df.replace(string, 2)
+            else:
+                df = df.replace(string, 0)
         ret.append(df)
     return ret
 
@@ -165,7 +179,7 @@ def extract_xy_from_concat(dataset: ConcatDataset):
 
     return x, y
 
-def duplicateClass(dataset, class_to_dup: float, times_to_dup):
+def duplicateClass(dataset, class_to_dup: float, times_to_dup: int):
     x_new = []
     y_new = []
 
@@ -180,11 +194,7 @@ def duplicateClass(dataset, class_to_dup: float, times_to_dup):
     dataset.x = torch.cat(x_new, dim=0)
     dataset.y = torch.cat(y_new, dim=0)
 
-from collections import defaultdict
-import random
-from torch.utils.data import Subset
-
-def createCustomTrainset(dataset, K, H):
+def createCustomSplit(dataset, K: int, H: int) -> (torch.Tensor, torch.Tensor):
     num_classes = 14
     n_per_class = K // num_classes
     class_indices = defaultdict(list)
@@ -218,4 +228,74 @@ def createCustomTrainset(dataset, K, H):
         label_list.append(y)
 
     return torch.stack(data_list), torch.tensor(label_list)
+
+def createCustomSplitSlowDos(dataset, y, indices, class_0_percentage: float, class_1_percentage: float) -> (Subset, Subset):
+    original_indices = np.array(indices)
+    labels = np.array(y)
+
+    class_0_indices = np.where(labels == 0)[0]
+    class_1_indices = np.where(labels == 1)[0]
+
+    np.random.seed(42)
+    np.random.shuffle(class_0_indices)
+    np.random.shuffle(class_1_indices)
+
+    split_0 = int(len(class_0_indices) * class_0_percentage)
+    train_0 = class_0_indices[:split_0]
+    test_0 = class_0_indices[split_0:]
+
+    split_1 = int(len(class_1_indices) * class_1_percentage)
+    train_1 = class_1_indices[:split_1]
+    test_1 = class_1_indices[split_1:]
+
+    train_indices = original_indices[np.concatenate([train_0, train_1])]
+    test_indices = original_indices[np.concatenate([test_0, test_1])]
+
+    train = Subset(dataset, train_indices)
+    test = Subset(dataset, test_indices)
+
+    return train, test
+
+def removeLabels(dataframes: list[pd.DataFrame], labels: list[str], labels_to_keep: list[str]) -> list[pd.DataFrame]:
+    ret = []
+    for df in dataframes:
+        for string in labels:
+            if string not in labels_to_keep:
+                df = df[df[" Label"] != string]
+        ret.append(df)
+    return ret
+
+def divideDataFrame(dataframe: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
+    df_DDoS, df_slowDoS = pd.DataFrame(), pd.DataFrame()
+    benign = dataframe[dataframe[" Label"] == 0] #only benign rows
+    benign_half = len(benign) // 2 #half-length of benign rows
+    ddos = dataframe[dataframe[" Label"] == 1] #only ddos rows
+    slow_dos = dataframe[dataframe[" Label"] == 2] #only slow dos rows
+    df_DDoS = pd.concat([df_DDoS, benign.iloc[:benign_half], ddos], ignore_index=True)
+    df_slowDoS = pd.concat([df_slowDoS, benign.iloc[benign_half + 1:], slow_dos], ignore_index=True)
+    return df_DDoS, df_slowDoS
+
+def divideDataset(dataset):
+    benign_idx = []
+    ddos_idx = []
+    slowdos_idx = []
+
+    for i in range(len(dataset)):
+        _, y = dataset[i]
+        label = y.item() if isinstance(y, torch.Tensor) else y
+        if label == 0:
+            benign_idx.append(i)
+        elif label == 1:
+            ddos_idx.append(i)
+        elif label == 2:
+            slowdos_idx.append(i)
+
+    half = len(benign_idx) // 2
+    benign_half1 = benign_idx[:half]
+    benign_half2 = benign_idx[half:]
+
+    ddos_subset = Subset(dataset, benign_half1 + ddos_idx)
+    slowdos_subset = Subset(dataset, benign_half2 + slowdos_idx)
+
+    return ddos_subset, slowdos_subset
 #-----datasets utils-----#

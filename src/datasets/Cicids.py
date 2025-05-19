@@ -11,6 +11,8 @@ class Cicids2017(Dataset):
             self.xy = xy.drop([' Destination Port'], axis="columns")
             self.xy = normalizeValues(xy)
             self.xy = removeCollinearFeatures(xy, 0.95)
+        else:
+            self.xy = xy
 
         self.x = torch.tensor(self.xy.to_numpy()).float() #54 columns
         self.y = torch.tensor(self.xy[[' Label']].to_numpy()).float()

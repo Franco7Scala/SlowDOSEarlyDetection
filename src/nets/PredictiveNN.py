@@ -53,7 +53,7 @@ class PredictiveNN(nn.Module):
             output = self(input)
             loss = criterion(output, target)
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.parameters(), 0.5)
+            #torch.nn.utils.clip_grad_norm_(self.parameters(), 0.5)
             optimizer.step()
             loss_sum += loss.item()
 

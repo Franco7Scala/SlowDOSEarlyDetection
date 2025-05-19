@@ -2,7 +2,8 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
-from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+from matplotlib import pyplot as plt
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, classification_report
 from torch.utils.data import DataLoader
 
 
@@ -24,9 +25,7 @@ class ConcatenatedPredictiveVAE(nn.Module):
 
     def forward(self, x1, x2):
         x1 = self.model1(x1)
-        x2 = self.model2(x2)
-        x2 = x2[2]
-        x2 = torch.Tensor(x2)
+        x2 = self.model2.encode(x2)
         x = torch.cat((x1, x2), dim=1)
         logits = self.fully_connected_1(x)
         return logits
@@ -41,10 +40,12 @@ class ConcatenatedPredictiveVAE(nn.Module):
         for param in self.model1.parameters():
             param.requires_grad = False
         for param in self.model2.parameters():
-            param.requires_grad = True
+            param.requires_grad = False
         # -----freeze model1 and model2-----#
 
         loss_sum = 0
+        count = 0
+
         for i, content in enumerate(train_loader):
             optimizer.zero_grad()
             target = content[1].to(self.device).view(-1).long()
@@ -53,9 +54,12 @@ class ConcatenatedPredictiveVAE(nn.Module):
             output = self(input1, input2)
             loss = criterion(output, target)
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.parameters(), 0.5)
+            #torch.nn.utils.clip_grad_norm_(self.parameters(), 0.5)
             optimizer.step()
             loss_sum += loss.item()
+            count += 1
+
+        return loss_sum / count
 
     def evaluate(self, loader, criterion):
         accuracy_am = AverageMeter('Accuracy', ':6.2f')
@@ -81,8 +85,9 @@ class ConcatenatedPredictiveVAE(nn.Module):
             all_targets.extend(target.cpu().numpy())
 
         precision = precision_score(all_targets, all_preds, average="weighted", zero_division=0)
-        recall = recall_score(all_targets, all_preds, average="weighted")
-        f1 = f1_score(all_targets, all_preds, average="weighted")
+        recall = recall_score(all_targets, all_preds, average="weighted", zero_division=0)
+        f1 = f1_score(all_targets, all_preds, average="weighted", zero_division=0)
+        cr = classification_report(all_targets, all_preds, target_names=["Benign", "SlowDoS"])
 
         precision_am.update(precision)
         recall_am.update(recall)
@@ -90,19 +95,33 @@ class ConcatenatedPredictiveVAE(nn.Module):
 
         self.no_grad = False
 
-        return accuracy_am.avg, precision_am.avg, recall_am.avg, f1_am.avg
+        return accuracy_am.avg, precision_am.avg, recall_am.avg, f1_am.avg, cr
 
     def fit(self, epochs, optimizer, criterion, train_loader, test_loader: Optional[DataLoader] = None):
+        train_losses_per_epoch = []
         accuracy, precision, recall, f1 = 0, 0, 0, 0
         for epoch in range(epochs):
-            self._train_epoch(train_loader, optimizer, criterion)
+            avg_loss = self._train_epoch(train_loader, optimizer, criterion)
+            train_losses_per_epoch.append(avg_loss)
             if test_loader is not None:
-                accuracy, precision, recall, f1 = self.evaluate(test_loader, criterion)
+                accuracy, precision, recall, f1, cr = self.evaluate(test_loader, criterion)
             print("epoch:", epoch)
         print("Finished training CPVAE!")
         if test_loader is not None:
             print("Final results:")
             print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}")
+        self.plotLoss(train_losses_per_epoch)
+
+    def plotLoss(self, loss):
+        plt.figure(figsize=(10, 6))
+        plt.plot(loss, label='Training Loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.title('Training Loss over Epochs')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
 # -----train and test-----#
 
 # da: PlayItStraiht di Francesco Scala

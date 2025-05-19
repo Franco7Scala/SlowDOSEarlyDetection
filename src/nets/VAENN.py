@@ -115,9 +115,9 @@ class VAENN(nn.Module):
                     loss["val_recon_loss"].append(val_recon_loss)
                 loss["train_loss"].append(train_loss)
                 loss["train_recon_loss"].append(train_recon_loss)
-        self.plotVAE(loss)
+        self.plotLoss(loss)
 
-    def plotVAE(self, loss):
+    def plotLoss(self, loss):
         plt.figure(figsize=(10, 6))
         plt.plot(loss["train_recon_loss"], label="Train Reconstruction Loss", linewidth=2)
         plt.plot(loss["val_recon_loss"], label="Validation Reconstruction Loss", linewidth=2)
