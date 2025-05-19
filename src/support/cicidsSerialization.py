@@ -40,7 +40,7 @@ input_size = dataset.x[ddos_subset.indices].shape[1]
 
 output_size = len(np.unique(dataframe[" Label"]))
 
-batch_size = 128
+batch_size = 256
 
 ddos_weights = torch.Tensor(compute_class_weight(class_weight="balanced", classes=np.unique(ddos_dataframe[" Label"]), y=ddos_dataframe[" Label"]))
 slodos_weights = torch.Tensor(compute_class_weight(class_weight="balanced", classes=np.unique(slowdos_dataframe[" Label"]), y=slowdos_dataframe[" Label"]))

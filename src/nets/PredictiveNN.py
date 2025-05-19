@@ -11,36 +11,43 @@ class PredictiveNN(nn.Module):
     def __init__(self, input_size, output_size, device, dropout: float):
         super(PredictiveNN, self).__init__()
         self.device = device
+        layer_size = 32
         self.fully_connected_1 = nn.Sequential(
-            nn.Linear(input_size, 64),
+            nn.Linear(input_size, layer_size),
             nn.ReLU(inplace=True),
-            nn.BatchNorm1d(64),
+            nn.BatchNorm1d(layer_size),
             nn.Dropout(dropout),
-            nn.Linear(64, 64),
+            nn.Linear(layer_size, layer_size),
             nn.ReLU(inplace=True),
-            nn.BatchNorm1d(64),
+            nn.BatchNorm1d(layer_size),
             nn.Dropout(dropout),
-            nn.Linear(64, 64),
+            nn.Linear(layer_size, layer_size),
             nn.ReLU(inplace=True),
-            nn.BatchNorm1d(64),
+            nn.BatchNorm1d(layer_size),
             nn.Dropout(dropout),
-            nn.Linear(64, 64),
+            nn.Linear(layer_size, layer_size),
             nn.ReLU(inplace=True),
-            nn.BatchNorm1d(64),
+            nn.BatchNorm1d(layer_size),
             nn.Dropout(dropout),
-            nn.Linear(64, 64),
+            nn.Linear(layer_size, layer_size),
             nn.ReLU(inplace=True),
-            nn.BatchNorm1d(64),
+        )
+        self.fully_connected_2 = nn.Sequential(
+            nn.BatchNorm1d(layer_size),
             nn.Dropout(dropout),
-            nn.Linear(64, output_size)
+            nn.Linear(layer_size, output_size)
         )
         self.to(self.device)
 
     def forward(self, x):
-        x = x.float()
-        logits = self.fully_connected_1(x)
+        encoded = self.encode(x)
+        logits = self.fully_connected_2(encoded)
         ret = torch.softmax(logits, dim=1)
         return ret
+
+    def encode(self, x):
+        x = x.float()
+        return self.fully_connected_1(x)
 
 #-----train and test-----#
     def _train_epoch(self, train_loader, optimizer, criterion):

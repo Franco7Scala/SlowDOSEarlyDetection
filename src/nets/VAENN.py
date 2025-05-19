@@ -105,17 +105,17 @@ class VAENN(nn.Module):
 
     def fit(self, epochs, optimizer, train_loader, test_loader: Optional[DataLoader] = None):
         loss = {"train_loss": [], "val_loss": [], "train_recon_loss": [], "val_recon_loss": []}
-        with tqdm(desc="Training", total=epochs) as pbar_outer:
-            for epoch in tqdm(range(epochs)):
-                train_loss, train_recon_loss = self._train_epoch(optimizer, train_loader)
-                if test_loader is not None:
-                    val_loss, val_recon_loss = self.evaluate(test_loader)
-                pbar_outer.update(1)
-                if test_loader is not None:
-                    loss["val_loss"].append(val_loss)
-                    loss["val_recon_loss"].append(val_recon_loss)
-                loss["train_loss"].append(train_loss)
-                loss["train_recon_loss"].append(train_recon_loss)
+        #with tqdm(desc="Training", total=epochs) as pbar_outer:
+        for epoch in tqdm(range(epochs)):
+            train_loss, train_recon_loss = self._train_epoch(optimizer, train_loader)
+            if test_loader is not None:
+                val_loss, val_recon_loss = self.evaluate(test_loader)
+            #pbar_outer.update(1)
+            if test_loader is not None:
+                loss["val_loss"].append(val_loss)
+                loss["val_recon_loss"].append(val_recon_loss)
+            loss["train_loss"].append(train_loss)
+            loss["train_recon_loss"].append(train_recon_loss)
         self.plotLoss(loss)
 
     def plotLoss(self, loss):
@@ -128,7 +128,7 @@ class VAENN(nn.Module):
         plt.legend()
         plt.grid(True)
         plt.tight_layout()
-        plt.show()
+        #plt.show()
 
     def save(self, path):
         torch.save(self.state_dict(), path)

@@ -26,10 +26,11 @@ class ConcatenatedPredictiveVAE(nn.Module):
         self.to(self.device)
 
     def forward(self, x):
-        x1 = self.model1(x)
+        x1 = self.model1.encode(x) #ff network
         x2 = self.model2(x)
-        x3 = self.model3.encode(x)
-        x = torch.cat((x1, x2, x3), dim=1)
+        x3 = self.model3.encode(x) #VAE network
+        #x = torch.cat((x1, x2, x3), dim=1)
+        x = torch.cat((x1, x3), dim=1)
         logits = self.fully_connected_1(x)
         return logits
 
@@ -76,11 +77,10 @@ class ConcatenatedPredictiveVAE(nn.Module):
         self.eval()
         self.no_grad = True
         for i, (input, target) in enumerate(loader):
-            input1 = input.to(self.device)
-            input2 = input.to(self.device)
+            input = input.to(self.device)
             target = target.to(self.device).view(-1).long()
             with torch.no_grad():
-                output = self(input1, input2)
+                output = self(input)
                 loss = torch.sqrt(criterion(output, target))
 
             _, predicted = torch.max(output.data, 1)
@@ -125,7 +125,7 @@ class ConcatenatedPredictiveVAE(nn.Module):
         plt.title('Training Loss over Epochs')
         plt.legend()
         plt.grid(True)
-        plt.show()
+        #plt.show()
 
 # -----train and test-----#
 

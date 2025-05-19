@@ -1,4 +1,5 @@
 import torch
+import math
 from torch import nn
 
 
@@ -16,7 +17,7 @@ def create_extended_input(raw_input_layer):
     extended_features = []
     range_values = [8]
 
-    extended_features.append(raw_input_layer)
+    #extended_features.append(raw_input_layer)
 
     #one_minus_i = Lambda(lambda x: 1 - torch.clip(x, 0, 1))(raw_input_layer)
     #extended_features.append(one_minus_i)
@@ -48,7 +49,7 @@ def create_extended_input(raw_input_layer):
     #extended_features.append(one_minus_exp_i)
 
     # improved input
-    return extended_features
+    return torch.cat(extended_features, axis=1)
 
 class LambdaLayer(nn.Module):
     def __init__(self, lambd):
