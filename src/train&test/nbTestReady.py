@@ -7,10 +7,10 @@ from src.support import utils
 
 utils.seed_everything(1) #seed
 
-x_test = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/x_test_slowdos.pkl', 'rb'))
-y_test = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/y_test_slowdos.pkl', 'rb'))
-x_train = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/x_train_slowdos.pkl', 'rb'))
-y_train = pickle.load(open('C:/Coding/PyCharm Projects/src/support/files/y_train_slowdos.pkl', 'rb'))
+x_test = pickle.load(open('/src/support/files/pickels/x_test_slowdos.pkl', 'rb'))
+y_test = pickle.load(open('/src/support/files/pickels/y_test_slowdos.pkl', 'rb'))
+x_train = pickle.load(open('/src/support/files/pickels/x_train_slowdos.pkl', 'rb'))
+y_train = pickle.load(open('/src/support/files/pickels/y_train_slowdos.pkl', 'rb'))
 
 #-----NaiveBayes model-----#
 nb_model = GaussianNB()

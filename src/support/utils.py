@@ -10,15 +10,18 @@ import random
 
 
 def get_base_dir():
-    #return "C:/Users/black/OneDrive/Desktop/Università/Tesi/cicids2017/csvs\MachineLearningCSV"
-    return "/home/scala/projects/SlowDosDetection/data"
+    return "C:/Coding/PyCharm Projects/src/support/files"
+    #return "/home/scala/projects/SlowDosDetection/data"
 
 
 #-----datasets utils-----#
 def stringLabels(dataFrames: list[pd.DataFrame]) -> list[str]:
     ret = []
     for df in dataFrames:
-        label = df[' Label'].unique()
+        if ' Label' in df.columns:
+            label = df[' Label'].unique()
+        else:
+            label = df['target'].unique()
         for string in label:
             if string not in ret:
                 ret.append(string)
@@ -60,9 +63,9 @@ def convertStringsSD(dataFrames: list[pd.DataFrame], labels: list[str]) -> list[
     ret = []
     for df in dataFrames:
         for string in labels:
-            if string == "DDoS":
+            if string == "DDoS" or string == "dos":
                 df = df.replace(string, 1)
-            elif string == "DoS Slowhttptest" or string == "DoS slowloris":
+            elif string == "DoS Slowhttptest" or string == "DoS slowloris" or string == "slowite":
                 df = df.replace(string, 2)
             else:
                 df = df.replace(string, 0)
@@ -72,7 +75,7 @@ def convertStringsSD(dataFrames: list[pd.DataFrame], labels: list[str]) -> list[
 def normalizeValues(dataFrame: pd.DataFrame) -> pd.DataFrame:
     ret = dataFrame
     for column in ret.columns:
-        if column != ' Label':
+        if not (column != ' Label' or column != 'target'):
             ret[column] = ret[column].replace(np.inf, 0) #replace inf with zero
             for value in ret[column].unique():
                 if value < 0:
@@ -267,16 +270,28 @@ def removeLabels(dataframes: list[pd.DataFrame], labels: list[str], labels_to_ke
     for df in dataframes:
         for string in labels:
             if string not in labels_to_keep:
-                df = df[df[" Label"] != string]
+                if ' Label' in df.columns:
+                    df = df[df[" Label"] != string]
+                else:
+                    df = df[df["target"] != string]
         ret.append(df)
     return ret
 
 def divideDataFrame(dataframe: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
     df_DDoS, df_slowDoS = pd.DataFrame(), pd.DataFrame()
-    benign = dataframe[dataframe[" Label"] == 0] #only benign rows
-    benign_half = len(benign) // 2 #half-length of benign rows
-    ddos = dataframe[dataframe[" Label"] == 1] #only ddos rows
-    slow_dos = dataframe[dataframe[" Label"] == 2] #only slow dos rows
+    if " Label" in dataframe.columns:
+        benign = dataframe[dataframe[" Label"] == 0] #only benign rows
+    else:
+        benign = dataframe[dataframe["target"] == 0] #only legitimate rows
+    benign_half = len(benign) // 2 #half-length of benign/legitimate rows
+    if " Label" in dataframe.columns:
+        ddos = dataframe[dataframe[" Label"] == 1] #only ddos rows
+    else:
+        ddos = dataframe[dataframe["target"] == 1] #only dos rows
+    if " Label" in dataframe.columns:
+        slow_dos = dataframe[dataframe[" Label"] == 2] #only slow dos rows
+    else:
+        slow_dos = dataframe[dataframe["target"] == 2] #only slow dos rows
     df_DDoS = pd.concat([df_DDoS, benign.iloc[:benign_half], ddos], ignore_index=True)
     df_slowDoS = pd.concat([df_slowDoS, benign.iloc[benign_half + 1:], slow_dos], ignore_index=True)
     return df_DDoS, df_slowDoS
@@ -304,4 +319,19 @@ def divideDataset(dataset):
     slowdos_subset = Subset(dataset, benign_half2 + slowdos_idx)
 
     return ddos_subset, slowdos_subset
+
+def redistibuteSlowDosRows(train_slowdos_df, test_slowdos_df):
+    test_rows = test_slowdos_df[test_slowdos_df['target'] == 1] #take all rows with target == 1
+    test_slowdos_df = test_slowdos_df.drop(test_rows.index) #remove all rows with target == 1
+    train_rows = train_slowdos_df[train_slowdos_df['target'] == 1] #take all rows with target == 1
+    train_slowdos_df = train_slowdos_df.drop(train_rows.index) #remove all rows with target == 1
+
+    slowdos_rows = pd.concat([test_rows, train_rows], ignore_index=True) #all rows with target == 1
+
+    move_to_train = slowdos_rows[slowdos_rows['target'] == 1].sample(5, random_state=42) #sample 5 rows with target == 1
+    move_to_test = slowdos_rows.drop(move_to_train.index) #remove sampled rows from all rows with target == 1
+
+    test_slowdos_df = pd.concat([test_slowdos_df, move_to_test], ignore_index=True)
+    train_slowdos_df = pd.concat([train_slowdos_df, move_to_train], ignore_index=True)
+    return train_slowdos_df, test_slowdos_df
 #-----datasets utils-----#
