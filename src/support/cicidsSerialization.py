@@ -10,10 +10,10 @@ from src.support import utils
 from src.support.utils import get_base_dir
 
 paths = [#"C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Tuesday-WorkingHours.pcap_ISCX.csv",
-         f"{get_base_dir()}/MachineLearningCVE/Wednesday-workingHours.pcap_ISCX.csv",
+         f"{get_base_dir()}/csvs/cicids/Wednesday-workingHours.pcap_ISCX.csv",
          #"C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv",
          #"C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv",
-         f"{get_base_dir()}/MachineLearningCVE/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
+         f"{get_base_dir()}/csvs/cicids/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
          #"C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Morning.pcap_ISCX.csv",
          #"C:/Users/black/Desktop/Studio/Università/Tirocinio/Tesi/cicids2017/csvs/MachineLearningCSV/MachineLearningCVE/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv"
          ]
@@ -52,8 +52,6 @@ y_ddos = dataset.y[ddos_subset.indices]
 x_slowdos = dataset.x[slowdos_subset.indices]
 y_slowdos = dataset.y[slowdos_subset.indices]
 
-count = np.unique(y_slowdos, return_counts=True)
-
 x_train_ddos, _, y_train_ddos, _ = utils.splitDataset(x_ddos, y_ddos, 0.7, 0.3)
 slowdos_train, slowdos_test = utils.createCustomSplitSlowDos(dataset, y_slowdos, slowdos_subset.indices, 0.7, 0.0004875)
 
@@ -68,35 +66,35 @@ x_test_slowdos, y_test_slowdos = utils.convertDataLoaderToNumpy(slowdos_test_loa
 print("Done!")
 #-----Train, Validation and Test DataLoaders-----#
 
-with (open(f"{get_base_dir()}/files/slowdos_test_loader.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickels/slowdos_test_loader.pkl", "wb")) as f:
     pickle.dump(slowdos_test_loader, f)
 
-with (open(f"{get_base_dir()}/files/input_size.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickels/input_size.pkl", "wb")) as f:
     pickle.dump(input_size, f)
 
-with (open(f"{get_base_dir()}/files/output_size.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickels/output_size.pkl", "wb")) as f:
     pickle.dump(output_size, f)
 
-with (open(f"{get_base_dir()}/files/ddos_weights.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickels/ddos_weights.pkl", "wb")) as f:
     pickle.dump(ddos_weights, f)
 
-with (open(f"{get_base_dir()}/files/slowdos_weights.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickels/slowdos_weights.pkl", "wb")) as f:
     pickle.dump(slodos_weights, f)
 
-with (open(f"{get_base_dir()}/files/ddos_train_loader.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickels/ddos_train_loader.pkl", "wb")) as f:
     pickle.dump(ddos_train_loader, f)
 
-with (open(f"{get_base_dir()}/files/slowdos_train_loader.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}//slowdos_train_loader.pkl", "wb")) as f:
     pickle.dump(slowdos_train_loader, f)
 
-with (open(f"{get_base_dir()}/files/x_train_slowdos.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickels/x_train_slowdos.pkl", "wb")) as f:
     pickle.dump(x_train_slowdos, f)
 
-with (open(f"{get_base_dir()}/files/y_train_slowdos.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickels/y_train_slowdos.pkl", "wb")) as f:
     pickle.dump(y_train_slowdos, f)
 
-with (open(f"{get_base_dir()}/files/x_test_slowdos.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickels/x_test_slowdos.pkl", "wb")) as f:
     pickle.dump(x_test_slowdos, f)
 
-with (open(f"{get_base_dir()}/files/y_test_slowdos.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickels/y_test_slowdos.pkl", "wb")) as f:
     pickle.dump(y_test_slowdos, f)
