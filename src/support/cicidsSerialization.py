@@ -45,8 +45,8 @@ batch_size = 256
 ddos_weights = torch.Tensor(compute_class_weight(class_weight="balanced", classes=np.unique(ddos_dataframe[" Label"]), y=ddos_dataframe[" Label"]))
 slodos_weights = torch.Tensor(compute_class_weight(class_weight="balanced", classes=np.unique(slowdos_dataframe[" Label"]), y=slowdos_dataframe[" Label"]))
 
-#-----Train, Validation and Test DataLoaders-----#
-print("Creating train, validation and test dataloaders...")
+print("Creating DataLoders...")
+#-----DataLoaders-----#
 x_ddos = dataset.x[ddos_subset.indices]
 y_ddos = dataset.y[ddos_subset.indices]
 x_slowdos = dataset.x[slowdos_subset.indices]
@@ -63,8 +63,8 @@ slowdos_train_loader = DataLoader(slowdos_train, batch_size=batch_size, shuffle=
 
 x_train_slowdos, y_train_slowdos = utils.convertDataLoaderToNumpy(slowdos_train_loader)
 x_test_slowdos, y_test_slowdos = utils.convertDataLoaderToNumpy(slowdos_test_loader)
-print("Done!")
 #-----Train, Validation and Test DataLoaders-----#
+print("Done!")
 
 with (open(f"{get_base_dir()}/pickels/slowdos_test_loader.pkl", "wb")) as f:
     pickle.dump(slowdos_test_loader, f)
@@ -84,7 +84,7 @@ with (open(f"{get_base_dir()}/pickels/slowdos_weights.pkl", "wb")) as f:
 with (open(f"{get_base_dir()}/pickels/ddos_train_loader.pkl", "wb")) as f:
     pickle.dump(ddos_train_loader, f)
 
-with (open(f"{get_base_dir()}//slowdos_train_loader.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickels/slowdos_train_loader.pkl", "wb")) as f:
     pickle.dump(slowdos_train_loader, f)
 
 with (open(f"{get_base_dir()}/pickels/x_train_slowdos.pkl", "wb")) as f:

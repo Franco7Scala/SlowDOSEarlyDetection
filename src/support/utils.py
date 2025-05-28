@@ -8,11 +8,9 @@ from torch.utils.data import Dataset, Subset, DataLoader, ConcatDataset, TensorD
 from collections import defaultdict
 import random
 
-
 def get_base_dir():
-    return "C:/Coding/PyCharm Projects/src/support/files"
+    return "C:/Coding/PyCharm Projects/SlowDOSEarlyDetection/src/support/files"
     #return "/home/scala/projects/SlowDosDetection/data"
-
 
 #-----datasets utils-----#
 def stringLabels(dataFrames: list[pd.DataFrame]) -> list[str]:
@@ -20,8 +18,10 @@ def stringLabels(dataFrames: list[pd.DataFrame]) -> list[str]:
     for df in dataFrames:
         if ' Label' in df.columns:
             label = df[' Label'].unique()
-        else:
+        elif 'target' in df.columns:
             label = df['target'].unique()
+        else:
+            label = df['Attack Type'].unique()
         for string in label:
             if string not in ret:
                 ret.append(string)
@@ -63,9 +63,9 @@ def convertStringsSD(dataFrames: list[pd.DataFrame], labels: list[str]) -> list[
     ret = []
     for df in dataFrames:
         for string in labels:
-            if string == "DDoS" or string == "dos":
+            if string == "DDoS" or string == "dos" or string == "HTTPFlood":
                 df = df.replace(string, 1)
-            elif string == "DoS Slowhttptest" or string == "DoS slowloris" or string == "slowite":
+            elif string == "DoS Slowhttptest" or string == "DoS slowloris" or string == "slowite" or string == "SlowrateDoS":
                 df = df.replace(string, 2)
             else:
                 df = df.replace(string, 0)
@@ -75,7 +75,7 @@ def convertStringsSD(dataFrames: list[pd.DataFrame], labels: list[str]) -> list[
 def normalizeValues(dataFrame: pd.DataFrame) -> pd.DataFrame:
     ret = dataFrame
     for column in ret.columns:
-        if not (column != ' Label' or column != 'target'):
+        if column not in [" Label", "target", "Attack Type"]:
             ret[column] = ret[column].replace(np.inf, 0) #replace inf with zero
             for value in ret[column].unique():
                 if value < 0:
@@ -238,7 +238,7 @@ def createCustomSplit(dataset, K: int, H: int) -> (torch.Tensor, torch.Tensor):
 
     return torch.stack(data_list), torch.tensor(label_list)
 
-def createCustomSplitSlowDos(dataset, y, indices, class_0_percentage: float, class_1_percentage: float) -> (Subset, Subset):
+def createCustomSplitSlowDos(dataset, y, indices, class_0_percentage: float, class_1_tuples: int) -> (Subset, Subset):
     original_indices = np.array(indices)
     labels = np.array(y)
 
@@ -253,7 +253,7 @@ def createCustomSplitSlowDos(dataset, y, indices, class_0_percentage: float, cla
     train_0 = class_0_indices[:split_0]
     test_0 = class_0_indices[split_0:]
 
-    split_1 = int(len(class_1_indices) * class_1_percentage)
+    split_1 = int(class_1_tuples)
     train_1 = class_1_indices[:split_1]
     test_1 = class_1_indices[split_1:]
 
@@ -272,8 +272,10 @@ def removeLabels(dataframes: list[pd.DataFrame], labels: list[str], labels_to_ke
             if string not in labels_to_keep:
                 if ' Label' in df.columns:
                     df = df[df[" Label"] != string]
-                else:
+                elif 'target' in df.columns:
                     df = df[df["target"] != string]
+                else:
+                    df = df[df["Attack Type"] != string]
         ret.append(df)
     return ret
 
@@ -281,17 +283,27 @@ def divideDataFrame(dataframe: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
     df_DDoS, df_slowDoS = pd.DataFrame(), pd.DataFrame()
     if " Label" in dataframe.columns:
         benign = dataframe[dataframe[" Label"] == 0] #only benign rows
-    else:
+    elif "target" in dataframe.columns:
         benign = dataframe[dataframe["target"] == 0] #only legitimate rows
+    else:
+        benign = dataframe[dataframe["Attack Type"] == 0] #only benign rows
+
     benign_half = len(benign) // 2 #half-length of benign/legitimate rows
+
     if " Label" in dataframe.columns:
         ddos = dataframe[dataframe[" Label"] == 1] #only ddos rows
-    else:
+    elif "target" in dataframe.columns:
         ddos = dataframe[dataframe["target"] == 1] #only dos rows
+    else:
+        ddos = dataframe[dataframe["Attack Type"] == 1] #only dos rows
+
     if " Label" in dataframe.columns:
         slow_dos = dataframe[dataframe[" Label"] == 2] #only slow dos rows
-    else:
+    elif "target" in dataframe.columns:
         slow_dos = dataframe[dataframe["target"] == 2] #only slow dos rows
+    else:
+        slow_dos = dataframe[dataframe["Attack Type"] == 2] #only slow dos rows
+
     df_DDoS = pd.concat([df_DDoS, benign.iloc[:benign_half], ddos], ignore_index=True)
     df_slowDoS = pd.concat([df_slowDoS, benign.iloc[benign_half + 1:], slow_dos], ignore_index=True)
     return df_DDoS, df_slowDoS
