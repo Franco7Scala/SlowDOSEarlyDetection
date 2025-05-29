@@ -62,35 +62,35 @@ output_size = 2
 dos_weights = torch.Tensor(compute_class_weight(class_weight="balanced", classes=np.unique(dos_dataframe["Attack Type"]), y=dos_dataframe["Attack Type"]))
 slodos_weights = torch.Tensor(compute_class_weight(class_weight="balanced", classes=np.unique(slowdos_dataframe["Attack Type"]), y=slowdos_dataframe["Attack Type"]))
 
-with (open(f"{get_base_dir()}/pickels/slowdos_test_loader.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickles/slowdos_test_loader.pkl", "wb")) as f:
     pickle.dump(slowdos_test_loader, f)
 
-with (open(f"{get_base_dir()}/pickels/input_size.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickles/input_size.pkl", "wb")) as f:
     pickle.dump(input_size, f)
 
-with (open(f"{get_base_dir()}/pickels/output_size.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickles/output_size.pkl", "wb")) as f:
     pickle.dump(output_size, f)
 
-with (open(f"{get_base_dir()}/pickels/dos_weights.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickles/dos_weights.pkl", "wb")) as f:
     pickle.dump(dos_weights, f)
 
-with (open(f"{get_base_dir()}/pickels/slowdos_weights.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickles/slowdos_weights.pkl", "wb")) as f:
     pickle.dump(slodos_weights, f)
 
-with (open(f"{get_base_dir()}/pickels/dos_train_loader.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickles/dos_train_loader.pkl", "wb")) as f:
     pickle.dump(dos_train_loader, f)
 
-with (open(f"{get_base_dir()}/pickels/slowdos_train_loader.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickles/slowdos_train_loader.pkl", "wb")) as f:
     pickle.dump(slowdos_train_loader, f)
 
-with (open(f"{get_base_dir()}/pickels/x_train_slowdos.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickles/x_train_slowdos.pkl", "wb")) as f:
     pickle.dump(x_train_slowdos, f)
 
-with (open(f"{get_base_dir()}/pickels/y_train_slowdos.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickles/y_train_slowdos.pkl", "wb")) as f:
     pickle.dump(y_train_slowdos, f)
 
-with (open(f"{get_base_dir()}/pickels/x_test_slowdos.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickles/x_test_slowdos.pkl", "wb")) as f:
     pickle.dump(x_test_slowdos, f)
 
-with (open(f"{get_base_dir()}/pickels/y_test_slowdos.pkl", "wb")) as f:
+with (open(f"{get_base_dir()}/pickles/y_test_slowdos.pkl", "wb")) as f:
     pickle.dump(y_test_slowdos, f)

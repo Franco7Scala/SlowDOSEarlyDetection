@@ -16,13 +16,13 @@ utils.seed_everything(1) #seed
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Running on {device}...")
 
-input_size = pickle.load(open(f"{get_base_dir()}/pickels/input_size.pkl", 'rb'))
+input_size = pickle.load(open(f"{get_base_dir()}/pickles/input_size.pkl", 'rb'))
 output_size = 2
-first_weights = pickle.load(open(f"{get_base_dir()}/pickels/dos_weights.pkl", 'rb'))
-adaptation_weights = pickle.load(open(f"{get_base_dir()}/pickels/slowdos_weights.pkl", 'rb'))
-first_train_loader = pickle.load(open(f"{get_base_dir()}/pickels/dos_train_loader.pkl", 'rb'))
-adaptation_train_loader = pickle.load(open(f"{get_base_dir()}/pickels/slowdos_train_loader.pkl", 'rb'))
-slowdos_test_loader = pickle.load(open(f"{get_base_dir()}/pickels/slowdos_test_loader.pkl", 'rb'))
+first_weights = pickle.load(open(f"{get_base_dir()}/pickles/dos_weights.pkl", 'rb'))
+adaptation_weights = pickle.load(open(f"{get_base_dir()}/pickles/slowdos_weights.pkl", 'rb'))
+first_train_loader = pickle.load(open(f"{get_base_dir()}/pickles/dos_train_loader.pkl", 'rb'))
+adaptation_train_loader = pickle.load(open(f"{get_base_dir()}/pickles/slowdos_train_loader.pkl", 'rb'))
+slowdos_test_loader = pickle.load(open(f"{get_base_dir()}/pickles/slowdos_test_loader.pkl", 'rb'))
 vae_path = f"{get_base_dir()}/vae_model_extended.pt"
 
 epochs_ff_first_train = 150

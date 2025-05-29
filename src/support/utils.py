@@ -9,7 +9,8 @@ from collections import defaultdict
 import random
 
 def get_base_dir():
-    return "C:/Coding/PyCharm Projects/SlowDOSEarlyDetection/src/support/files"
+    return "C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files"
+    #return "C:/Coding/PyCharm Projects/SlowDOSEarlyDetection/src/support/files"
     #return "/home/scala/projects/SlowDosDetection/data"
 
 #-----datasets utils-----#
