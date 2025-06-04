@@ -10,10 +10,10 @@ from src.support.utils import get_base_dir
 
 utils.seed_everything(1) #seed
 
-x_test = pickle.load(open(f'{get_base_dir()}/pickels/x_test_slowdos.pkl', 'rb'))
-y_test = pickle.load(open(f'{get_base_dir()}/pickels/y_test_slowdos.pkl', 'rb'))
-x_train = pickle.load(open(f'{get_base_dir()}/pickels/x_train_slowdos.pkl', 'rb'))
-y_train = pickle.load(open(f'{get_base_dir()}/pickels/y_train_slowdos.pkl', 'rb'))
+x_test = pickle.load(open(f'{get_base_dir()}/pickles/x_test_slowdos.pkl', 'rb'))
+y_test = pickle.load(open(f'{get_base_dir()}/pickles/y_test_slowdos.pkl', 'rb'))
+x_train = pickle.load(open(f'{get_base_dir()}/pickles/x_train_slowdos.pkl', 'rb'))
+y_train = pickle.load(open(f'{get_base_dir()}/pickles/y_train_slowdos.pkl', 'rb'))
 
 #-----XGBoost model-----#
 xgb_model = xgb.XGBClassifier(n_estimators=80)

@@ -5,7 +5,7 @@ import torch.nn as nn
 from typing import Optional
 from tqdm import tqdm
 from matplotlib import pyplot as plt
-from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, classification_report, roc_auc_score
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, classification_report, roc_auc_score, precision_recall_curve, auc
 from torch.utils.data import DataLoader
 
 from src.support.utils import get_base_dir
@@ -13,14 +13,13 @@ from src.support.utils import get_base_dir
 
 class ConcatenatedPredictiveVAE(nn.Module):
 
-    def __init__(self, model1, model2, model3, input_size, output_size, device, random_noise=False, mean=0., std=1.):
+    def __init__(self, model1, model3, input_size, output_size, device, random_noise=False, mean=0., std=1.):
         super(ConcatenatedPredictiveVAE, self).__init__()
         self.random_noise = random_noise
         self.mean = mean
         self.std = std
         self.device = device
         self.model1 = model1
-        self.model2 = model2
         self.model3 = model3
         self.fully_connected_1 = nn.Sequential(
             nn.Linear(input_size, 64),
@@ -36,10 +35,9 @@ class ConcatenatedPredictiveVAE(nn.Module):
             x = x + torch.randn(x.size()).to(x.device) * self.std + self.mean
 
         x1 = self.model1.encode(x) #ff network
-        x2 = self.model2(x)
         x3 = self.model3.encode(x) #VAE network
-        #x = torch.cat((x1, x2, x3), dim=1)
         x = torch.cat((x1, x3), dim=1)
+        #x = x1 #
         logits = self.fully_connected_1(x)
         return logits
 
@@ -49,12 +47,10 @@ class ConcatenatedPredictiveVAE(nn.Module):
 
         #-----freeze model1, model2 and model3-----#
         self.model1.eval()
-        self.model2.eval()
         self.model3.eval()
         for param in self.model1.parameters():
             param.requires_grad = False
-        for param in self.model2.parameters():
-            param.requires_grad = False
+
         for param in self.model3.parameters():
             param.requires_grad = False
         # -----freeze model1, model2 and model3-----#
@@ -73,6 +69,9 @@ class ConcatenatedPredictiveVAE(nn.Module):
             optimizer.step()
             loss_sum += loss.item()
             count += 1
+
+        _, _, _, _, auc_, _, _ = self.evaluate(train_loader, criterion)
+        print(f"Auc: {auc_}")
 
         return loss_sum / count
 
@@ -107,8 +106,21 @@ class ConcatenatedPredictiveVAE(nn.Module):
         precision = precision_score(all_targets, all_preds, average="weighted", zero_division=0)
         recall = recall_score(all_targets, all_preds, average="weighted", zero_division=0)
         f1 = f1_score(all_targets, all_preds, average="weighted", zero_division=0)
-        auc = roc_auc_score(y_true=all_targets, y_score=all_preds)
+        auc_ = roc_auc_score(y_true=all_targets, y_score=all_preds)
         cr = classification_report(all_targets, all_preds, target_names=["Benign", "SlowDoS"])
+
+        rc_precision, rc_recall, rc_thresholds = precision_recall_curve(all_targets, numpy.array(output_probs)[:, 1])
+        pr_auc = auc(rc_recall, rc_precision)
+
+        #---------------------------------------
+        # Step 7: Plot the Precision-Recall curve.
+        plt.plot(rc_recall, rc_precision, marker='.', label='Logistic')
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.title('Precision-Recall curve')
+        plt.savefig(f"{get_base_dir()}/pr_auc.jpg")
+        #plt.show()
+        # ---------------------------------------
 
         precision_am.update(precision)
         recall_am.update(recall)
@@ -123,7 +135,7 @@ class ConcatenatedPredictiveVAE(nn.Module):
         with open(f"{get_base_dir()}/output_probs_{evaluation_on}.csv", "w") as f:
             f.write(string_csv)
 
-        return accuracy_am.avg, precision_am.avg, recall_am.avg, f1_am.avg, auc, cr
+        return accuracy_am.avg, precision_am.avg, recall_am.avg, f1_am.avg, auc_, cr, pr_auc
 
     def fit(self, epochs, optimizer, criterion, train_loader, test_loader: Optional[DataLoader] = None):
         train_losses_per_epoch = []
@@ -132,13 +144,13 @@ class ConcatenatedPredictiveVAE(nn.Module):
             avg_loss = self._train_epoch(train_loader, optimizer, criterion)
             train_losses_per_epoch.append(avg_loss)
             if test_loader is not None:
-                accuracy, precision, recall, f1, auc, cr = self.evaluate(test_loader, criterion)
+                accuracy, precision, recall, f1, auc_, cr, pr_auc = self.evaluate(test_loader, criterion)
 
         print("Finished training CPVAE!")
         if test_loader is not None:
             print("Final results:")
-            print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}, auc: {auc}")
-        self.plotLoss(train_losses_per_epoch)
+            print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}, auc: {auc_}, pr_auc: {pr_auc}")
+        #self.plotLoss(train_losses_per_epoch)
 
     def plotLoss(self, loss):
         plt.figure(figsize=(10, 6))

@@ -15,6 +15,7 @@ class Cicids2017(Dataset):
             self.xy = xy
 
         self.x = torch.tensor(self.xy.to_numpy()).float()
+        self.x = self.x[:, range(0, 54)]
         self.y = torch.tensor(self.xy[[' Label']].to_numpy()).float()
 
     def __getitem__(self, index):

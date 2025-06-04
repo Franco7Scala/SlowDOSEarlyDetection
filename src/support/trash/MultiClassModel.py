@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader, TensorDataset
 import pandas as pd
 import numpy as np
 
-from src.datasets import Cicids
+from src.datasets import cicids
 from src.nets.PredictiveNN import PredictiveNN
 from src.support import utils
 

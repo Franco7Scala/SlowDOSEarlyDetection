@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader, TensorDataset
 import pandas as pd
 import time
 
-from src.datasets import Cicids
+from src.datasets import cicids
 from src.support import utils
 from src.nets.PredictiveNN import PredictiveNN
 from src.nets.VAENN import VAENN
@@ -91,7 +91,7 @@ CPVAE_optimizer = torch.optim.Adam(CPVAE_model.parameters(), lr=0.00001)
 print("Starting ConcatenatedPredictiveVAE model Training...")
 CPVAE_model.fit(epochs, CPVAE_optimizer, CPVAE_criterion, train_loader, validation_loader)
 print("Starting Testing...")
-accuracy, precision, recall, f1, auc, _ = CPVAE_model.evaluate(test_loader, CPVAE_criterion)
+accuracy, precision, recall, f1, auc, _, _ = CPVAE_model.evaluate(test_loader, CPVAE_criterion)
 end = time.time()
 print("Test results:")
 print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}, auc: {auc}")

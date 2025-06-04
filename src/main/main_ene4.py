@@ -12,23 +12,25 @@ from src.support.focal_loss import FocalLoss
 from src.support.utils import get_base_dir
 
 utils.seed_everything(1) #seed
+dataset_name = "cicids"
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Running on {device}...")
 
-input_size = pickle.load(open(f"{get_base_dir()}/pickles/input_size.pkl", 'rb'))
-output_size = 2
-first_weights = pickle.load(open(f"{get_base_dir()}/pickles/dos_weights.pkl", 'rb'))
-adaptation_weights = pickle.load(open(f"{get_base_dir()}/pickles/slowdos_weights.pkl", 'rb'))
-first_train_loader = pickle.load(open(f"{get_base_dir()}/pickles/dos_train_loader.pkl", 'rb'))
-adaptation_train_loader = pickle.load(open(f"{get_base_dir()}/pickles/slowdos_train_loader.pkl", 'rb'))
-slowdos_test_loader = pickle.load(open(f"{get_base_dir()}/pickles/slowdos_test_loader.pkl", 'rb'))
-vae_path = f"{get_base_dir()}/vae_model_extended.pt"
 
-epochs_ff_first_train = 150
-epochs_vae_first_train = 150
-epochs_ensemble_first_train = 50
-epochs_ensemble_adaptation_train = 150
+output_size = 2
+first_weights = pickle.load(open(f"{get_base_dir()}/pickles_{dataset_name}/dos_weights.pkl", 'rb'))
+adaptation_weights = pickle.load(open(f"{get_base_dir()}/pickles_{dataset_name}/slowdos_weights.pkl", 'rb'))
+first_train_loader = pickle.load(open(f"{get_base_dir()}/pickles_{dataset_name}/dos_train_loader.pkl", 'rb'))
+adaptation_train_loader = pickle.load(open(f"{get_base_dir()}/pickles_{dataset_name}/slowdos_train_loader.pkl", 'rb'))
+slowdos_test_loader = pickle.load(open(f"{get_base_dir()}/pickles_{dataset_name}/slowdos_test_loader.pkl", 'rb'))
+vae_path = f"{get_base_dir()}/vae_model_extended_{dataset_name}_new.pt"
+
+input_size = 54 #27 mqtt #44 nidd # 54 cicids
+epochs_ff_first_train = 1
+epochs_vae_first_train = 50
+epochs_ensemble_first_train = 1
+epochs_ensemble_adaptation_train = 16
 dim_code = 8
 dropout = 0.05
 weighs = [-1, 32]
@@ -39,10 +41,9 @@ std = 0.05
 
 #-----ConcatenatedPredictiveVAE NeuralNetwork-----#
 MC_model = PredictiveNN(input_size, output_size, device, dropout)
-MC_model_extended = PredictiveExtendedNN(input_size, output_size, device, dropout)
 VAE_model = VAENN(dim_code, input_size, device)
 
-CPVAE_model = ConcatenatedPredictiveVAE(MC_model, MC_model_extended, VAE_model, (dim_code + 32), output_size, device, random_noise=random_noise, mean=mean, std=std)
+CPVAE_model = ConcatenatedPredictiveVAE(MC_model, VAE_model, (dim_code + 32), output_size, device, random_noise=random_noise, mean=mean, std=std)
 
 MC_optimizer = torch.optim.Adam(MC_model.parameters(), lr=0.0001)
 VAE_optimizer = torch.optim.Adam(VAE_model.parameters(), lr=0.0001)
@@ -93,7 +94,7 @@ if weighs is not None:
         adaptation_weights[1] = weighs[1]
 
 #CPVAE_criterion = torch.nn.CrossEntropyLoss(weight=slowdos_weights.to(device))
-CPVAE_criterion = FocalLoss(gamma=2, alpha=0.5, reduction="mean")
+CPVAE_criterion = FocalLoss(gamma=64, alpha=0.5, reduction="mean") #TODO 128 per cicids
 
 print("Starting SlowDoS ConcatenatedPredictiveVAE model training...")
 #-----MultiClass model training-----#
@@ -109,15 +110,15 @@ print("ConcatenatedPredictiveVAE done!")
 print(f"Adaptation training time: {end - start:.2f} seconds")
 
 print(f"Starting ConcatenatedPredictiveVAE testing on train set...")
-accuracy, precision, recall, f1, auc, cr = CPVAE_model.evaluate(adaptation_train_loader, CPVAE_criterion, evaluation_on="train")
+accuracy, precision, recall, f1, auc, cr, pr_auc = CPVAE_model.evaluate(adaptation_train_loader, CPVAE_criterion, evaluation_on="train")
 print("ConcatenatedPredictiveVAE test results:")
-print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}, auc: {auc}")
+print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}, auc: {auc}, pr_auc: {pr_auc}")
 print(cr)
 
 print("-" * 100)
 
 print(f"Starting ConcatenatedPredictiveVAE testing on test set...")
-accuracy, precision, recall, f1, auc, cr = CPVAE_model.evaluate(slowdos_test_loader, CPVAE_criterion, evaluation_on="test")
+accuracy, precision, recall, f1, auc, cr, pr_auc = CPVAE_model.evaluate(slowdos_test_loader, CPVAE_criterion, evaluation_on="test")
 print("ConcatenatedPredictiveVAE test results:")
-print(f"accuracy: {accuracy}, precision: {precision}, recall: {recall}, f1: {f1}, auc: {auc}")
+print(f"accuracy: {accuracy}\nprecision: {precision}\nrecall: {recall}\nf1: {f1}\nauc: {auc}\npr_auc: {pr_auc}")
 print(cr)

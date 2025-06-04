@@ -1,11 +1,11 @@
-import math
-from tqdm import tqdm
 import torch
 import torch.nn as nn
-from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
-from typing import Optional
 
+from tqdm import tqdm
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, classification_report, roc_auc_score
+from typing import Optional
 from torch.utils.data import DataLoader
+
 
 class PredictiveNN(nn.Module):
     def __init__(self, input_size, output_size, device, dropout: float):
@@ -89,6 +89,9 @@ class PredictiveNN(nn.Module):
         precision = precision_score(all_targets, all_preds, average="weighted", zero_division=0)
         recall = recall_score(all_targets, all_preds, average="weighted")
         f1 = f1_score(all_targets, all_preds, average="weighted")
+        auc = roc_auc_score(y_true=all_targets, y_score=all_preds)
+        cr = classification_report(all_targets, all_preds, target_names=["Benign", "SlowDoS"])
+
 
         precision_am.update(precision)
         recall_am.update(recall)
@@ -96,7 +99,7 @@ class PredictiveNN(nn.Module):
 
         self.no_grad = False
 
-        return accuracy_am.avg, precision_am.avg, recall_am.avg, f1_am.avg
+        return accuracy_am.avg, precision_am.avg, recall_am.avg, f1_am.avg, auc, cr
 
     def fit(self, epochs, optimizer, criterion, train_loader, test_loader: Optional[DataLoader] = None):
         accuracy, precision, recall, f1 = 0, 0, 0, 0

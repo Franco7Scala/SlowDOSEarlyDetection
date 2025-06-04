@@ -2,6 +2,12 @@ import pickle
 import time
 import os
 
+default_n_threads = 8
+os.environ['OPENBLAS_NUM_THREADS'] = f"{default_n_threads}"
+os.environ['MKL_NUM_THREADS'] = f"{default_n_threads}"
+os.environ['OMP_NUM_THREADS'] = f"{default_n_threads}"
+
+
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, \
     roc_auc_score
 from sklearn.neighbors import KNeighborsClassifier
@@ -13,10 +19,10 @@ os.environ['OMP_NUM_THREADS'] = '1'
 
 utils.seed_everything(1) #seed
 
-x_test = pickle.load(open(f'{get_base_dir()}/pickels/x_test_slowdos.pkl', 'rb'))
-y_test = pickle.load(open(f'{get_base_dir()}/pickels/y_test_slowdos.pkl', 'rb'))
-x_train = pickle.load(open(f'{get_base_dir()}/pickels/x_train_slowdos.pkl', 'rb'))
-y_train = pickle.load(open(f'{get_base_dir()}/pickels/y_train_slowdos.pkl', 'rb'))
+x_test = pickle.load(open(f'{get_base_dir()}/pickles/x_test_slowdos.pkl', 'rb'))
+y_test = pickle.load(open(f'{get_base_dir()}/pickles/y_test_slowdos.pkl', 'rb'))
+x_train = pickle.load(open(f'{get_base_dir()}/pickles/x_train_slowdos.pkl', 'rb'))
+y_train = pickle.load(open(f'{get_base_dir()}/pickles/y_train_slowdos.pkl', 'rb'))
 
 #-----KNN model-----#
 knn_model = KNeighborsClassifier(n_neighbors=3)

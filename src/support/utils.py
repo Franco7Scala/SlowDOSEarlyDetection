@@ -9,9 +9,9 @@ from collections import defaultdict
 import random
 
 def get_base_dir():
-    return "C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files"
+    #return "C:/Users/black/PycharmProjects/SlowDOSEarlyDetection/src/support/files"
     #return "C:/Coding/PyCharm Projects/SlowDOSEarlyDetection/src/support/files"
-    #return "/home/scala/projects/SlowDosDetection/data"
+    return "/home/scala/projects/SlowDosDetection/data"
 
 #-----datasets utils-----#
 def stringLabels(dataFrames: list[pd.DataFrame]) -> list[str]:
@@ -255,6 +255,7 @@ def createCustomSplitSlowDos(dataset, y, indices, class_0_percentage: float, cla
     test_0 = class_0_indices[split_0:]
 
     split_1 = int(class_1_tuples)
+    #split_1 = int(len(class_1_indices)/2) #TODO to remove
     train_1 = class_1_indices[:split_1]
     test_1 = class_1_indices[split_1:]
 
